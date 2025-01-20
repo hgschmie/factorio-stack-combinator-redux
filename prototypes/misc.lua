@@ -48,9 +48,7 @@ local selector = data.raw['selector-combinator']['selector-combinator'] --[[@as 
 
 -- reskin as a selector combinator
 
-local fields = { 'sprites', 'activity_led_sprites', 'activity_led_light_offsets', 'screen_light_offsets' }
-
-for _, field in pairs(fields) do
+for _, field in pairs({ 'sprites', 'activity_led_sprites', 'activity_led_light_offsets', 'screen_light_offsets' }) do
     entity[field] = util.copy(selector[field])
 end
 
