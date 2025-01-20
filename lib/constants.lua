@@ -16,7 +16,10 @@ local Constants = {
     prefix = 'hps__sc-',
     name = 'stack-combinator-redux',
     root = '__stack-combinator-redux__',
+    order = 'c[combinators]-r[stack-combinator-redux]',
 }
+
+Constants.gfx_location = Constants.root .. '/graphics/'
 
 --------------------------------------------------------------------------------
 -- Framework intializer
@@ -55,6 +58,20 @@ end
 function Constants:locale(id)
     return Constants:with_prefix('gui.') .. id
 end
+
+------------------------------------------------------------------------
+-- constants and names
+------------------------------------------------------------------------
+
+-- Base name
+Constants.stack_combinator_name = Constants:with_prefix(Constants.name)
+
+-- Compactcircuits support
+Constants.stack_combinator_name_packed = Constants:with_prefix(Constants.name .. '-packed')
+
+Constants.main_entity_names = {
+    Constants.stack_combinator_name, Constants.stack_combinator_name_packed,
+}
 
 ------------------------------------------------------------------------
 return Constants
