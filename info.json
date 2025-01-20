@@ -1,0 +1,19 @@
+{
+  "name": "stack-combinator-redux",
+  "version": "0.0.1",
+  "title": "Stack Combinator (Redux)",
+  "description": "",
+  "author": "hgschmie",
+  "contact": "https://github.com/hgschmie/factorio-stack-combinator-redux/issues/",
+  "homepage": "https://github.com/hgschmie/factorio-stack-combinator-redux",
+  "factorio_version": "2.0",
+  "dependencies": [
+    "base >= 2.0.0"
+  ],
+  "package": {
+    "git_publish_branch": "main",
+    "readme": "README.md",
+    "gallery": [ ".portal/screenshot-1.png", ".portal/screenshot-2.png", ".portal/screenshot-3.png" ],
+    "sync_portal_details": true
+  }
+}
