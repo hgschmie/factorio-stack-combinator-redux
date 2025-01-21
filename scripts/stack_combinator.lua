@@ -97,6 +97,31 @@ local function create_config(parent_config)
     return util.merge { default_config, parent_config }
 end
 
+
+---@param main LuaEntity
+---@param config stack_combinator.Config
+---@return LuaEntity
+local function create_output(main, config)
+    -- create output constant combinator
+    local output = main.surface.create_entity {
+        name = const.stack_combinator_output_name,
+        position = main.position,
+        quality = main.quality,
+        force = main.force,
+    }
+    assert(output)
+
+    output.destructible = false
+    output.operable = true
+    local main_wire_connectors = main.get_wire_connectors(true)
+    local output_wire_connectors = output.get_wire_connectors(true)
+
+    main_wire_connectors[defines.wire_connector_id.combinator_output_red].connect_to(output_wire_connectors[defines.wire_connector_id.circuit_red], false, defines.wire_origin.script)
+    main_wire_connectors[defines.wire_connector_id.combinator_output_green].connect_to(output_wire_connectors[defines.wire_connector_id.circuit_green], false, defines.wire_origin.script)
+
+    return output
+end
+
 ------------------------------------------------------------------------
 -- create / delete
 ------------------------------------------------------------------------
@@ -118,10 +143,13 @@ function StaCo:create(main, tags)
     ---@type stack_combinator.Data
     local entity_data = {
         main = main,
+        output = create_output(main, config),
         config = config,
     }
 
     self:registerEntity(entity_id, entity_data)
+
+    self:reconfigure(entity_data)
 
     return entity_data
 end
@@ -136,8 +164,14 @@ function StaCo:destroy(entity_id)
     if not entity_data then return end
 
     entity_data.main = nil
+
+    if Is.Valid(entity_data.output) then entity_data.output.destroy() end
+    entity_data.output = nil
 end
 
 ------------------------------------------------------------------------
+
+function StaCo:reconfigure(entity_data)
+end
 
 return StaCo

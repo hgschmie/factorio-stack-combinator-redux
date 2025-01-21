@@ -23,4 +23,5 @@
 
 ---@class stack_combinator.Data
 ---@field main LuaEntity
+---@field output LuaEntity
 ---@field config stack_combinator.Config

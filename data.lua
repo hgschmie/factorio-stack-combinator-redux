@@ -6,6 +6,7 @@ require('lib.init')
 
 local const = require('lib.constants')
 
+require('prototypes.entities')
 require('prototypes.misc')
 
 ------------------------------------------------------------------------

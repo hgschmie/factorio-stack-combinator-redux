@@ -66,6 +66,8 @@ end
 -- Base name
 Constants.stack_combinator_name = Constants:with_prefix(Constants.name)
 
+Constants.stack_combinator_output_name = Constants.stack_combinator_name .. '-o'
+
 -- Compactcircuits support
 Constants.stack_combinator_name_packed = Constants:with_prefix(Constants.name .. '-packed')
 
