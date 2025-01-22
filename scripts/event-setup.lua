@@ -31,7 +31,7 @@ local function onEntityCreated(event)
     -- register entity for destruction
     script.register_on_object_destroyed(entity)
 
-    This.StackCombinator:create(entity, tags)
+    This.StackCombinator:create(entity, player_index, tags)
 end
 
 ---@param event EventData.on_player_mined_entity | EventData.on_robot_mined_entity | EventData.on_space_platform_mined_entity | EventData.on_entity_died | EventData.script_raised_destroy
@@ -59,6 +59,50 @@ local function onConfigurationChanged()
 end
 
 --------------------------------------------------------------------------------
+-- Ticker
+--------------------------------------------------------------------------------
+
+---@param event EventData.on_tick
+local function onTick(event)
+    local interval = Framework.settings:runtime_setting(const.settings_names.update_interval) or 6
+    local entities = This.StackCombinator:entities()
+    local process_count = math.ceil(table_size(entities) / interval)
+    local index = storage.last_tick_entity
+
+    if table_size(entities) == 0 then
+        index = nil
+    else
+        local destroy_list = {}
+        local entity_data
+        repeat
+            index, entity_data = next(entities, index)
+            if entity_data and (entity_data.main and entity_data.main.valid) then
+                if (event.tick - entity_data.tick) >= interval then
+                    if This.StackCombinator:tick(entity_data) then
+                        process_count = process_count - 1
+                    end
+                end
+            else
+                table.insert(destroy_list, index)
+            end
+        until process_count == 0 or not index
+
+        if table_size(destroy_list) then
+            for _, unit_id in pairs(destroy_list) do
+                This.StackCombinator:destroy(unit_id)
+
+                -- if the last index was destroyed, reset the scan loop index
+                if unit_id == index then
+                    index = nil
+                end
+            end
+        end
+    end
+
+    storage.last_tick_entity = index
+end
+
+--------------------------------------------------------------------------------
 -- event registration and management
 --------------------------------------------------------------------------------
 
@@ -72,6 +116,9 @@ local function register_events()
     -- Configuration changes (runtime and startup)
     Event.on_configuration_changed(onConfigurationChanged)
     Event.register(defines.events.on_runtime_mod_setting_changed, onConfigurationChanged)
+
+    -- Ticker
+    Event.register(defines.events.on_tick, onTick)
 end
 
 local function on_init()

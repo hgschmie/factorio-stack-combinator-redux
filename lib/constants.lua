@@ -76,4 +76,41 @@ Constants.main_entity_names = {
 }
 
 ------------------------------------------------------------------------
+-- constants and names
+------------------------------------------------------------------------
+
+Constants.defines = {
+    ---@enum stack_combinator.non_item_signal_type
+    non_item_signal_type = {
+        pass = 1,
+        invert = 2,
+        drop = 3,
+    },
+
+    ---@enum stack_combinator.operations
+    operations = {
+        multiply = 1,
+        divide_ceil = 2,
+        divide_floor = 3,
+        round = 4,
+        ceil = 5,
+        floor = 6,
+    }
+}
+
+Constants.settings_keys = {
+    'empty_unpowered',
+    'non_item_signals',
+    'update_interval',
+}
+
+Constants.settings_names = {}
+Constants.settings = {}
+
+for _, key in pairs(Constants.settings_keys) do
+    Constants.settings_names[key] = key
+    Constants.settings[key] = Constants:with_prefix(key)
+end
+
+------------------------------------------------------------------------
 return Constants
