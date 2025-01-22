@@ -16,6 +16,7 @@ Framework.settings:add_defaults(require('lib.settings'))
 
 if script then
     This.StackCombinator = require('scripts.stack_combinator')
+    This.Gui = require('scripts.gui')
 end
 
 return This
