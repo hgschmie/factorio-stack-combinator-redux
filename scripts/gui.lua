@@ -61,7 +61,6 @@ function Gui.getUi(entity_data)
             {  -- Body
                 type = 'frame',
                 style = 'entity_frame',
-                style_mods = { width = 424, },
                 children = {
                     {
                         type = 'flow',
@@ -76,7 +75,7 @@ function Gui.getUi(entity_data)
                                     {
                                         type = 'label',
                                         style = 'subheader_caption_label',
-                                        caption = { '', { 'gui-arithmetic.input' }, ':' },
+                                        caption = { '', { 'gui-arithmetic.input' }, { 'colon' } },
                                     },
                                     {
                                         type = 'label',
@@ -102,7 +101,7 @@ function Gui.getUi(entity_data)
                                     {
                                         type = 'label',
                                         style = 'subheader_caption_label',
-                                        caption = { '', { 'gui-arithmetic.output' }, ':' },
+                                        caption = { '', { 'gui-arithmetic.output' }, { 'colon' } },
                                     },
                                     {
                                         type = 'label',
@@ -158,6 +157,244 @@ function Gui.getUi(entity_data)
                                         name = 'preview',
                                         style = 'wide_entity_button',
                                         elem_mods = { entity = entity_data.main },
+                                    },
+                                },
+                            },
+                            {
+                                type = 'flow',
+                                direction = 'horizontal',
+                                style_mods = {
+                                    vertical_align = 'center',
+                                },
+                                children = {
+                                    {
+                                        type = 'label',
+                                        style = 'semibold_label',
+                                        caption = { const:locale('operation-mode') },
+                                        style_mods = {
+                                            right_padding = 8,
+                                        },
+                                    },
+                                    {
+                                        type = 'drop-down',
+                                        style = 'circuit_condition_comparator_dropdown',
+                                        name = 'operation-mode',
+                                        handler = {},
+                                        items = {
+                                            { const:locale('operation-mode-1') },
+                                            { const:locale('operation-mode-2') },
+                                            { const:locale('operation-mode-3') },
+                                            { const:locale('operation-mode-4') },
+                                            { const:locale('operation-mode-5') },
+                                            { const:locale('operation-mode-6') },
+                                        },
+                                        selected_index = 3,
+                                    },
+                                    {
+                                        type = 'label',
+                                        style = 'label',
+                                        caption = { const:locale('operation-mode-description-3') },
+                                        style_mods = {
+                                            left_padding = 8,
+                                        },
+                                    },
+                                },
+                            },
+                            {
+                                type = 'label',
+                                style = 'semibold_label',
+                                caption = { 'description.signals' },
+                            },
+                            {
+                                type = 'checkbox',
+                                caption = { const:locale('merge-signals') },
+                                tooltip = { const:locale('merge-signals-description') },
+                                name = 'merge-signals',
+                                handler = {},
+                                state = false,
+                            },
+                            {
+                                type = 'table',
+                                column_count = 2,
+                                children = {
+                                    -- row 1
+                                    {
+                                        type = 'checkbox',
+                                        caption = { 'color-capital.red' },
+                                        name = 'enable-red',
+                                        handler = {},
+                                        state = true,
+                                    },
+                                    {
+                                        type = 'checkbox',
+                                        caption = { const:locale('invert') },
+                                        name = 'invert-red',
+                                        handler = {},
+                                        state = false,
+                                    },
+                                    -- row 2
+                                    {
+                                        type = 'checkbox',
+                                        caption = { 'color-capital.green' },
+                                        name = 'enable-green',
+                                        handler = {},
+                                        state = true,
+                                    },
+                                    {
+                                        type = 'checkbox',
+                                        caption = { const:locale('invert') },
+                                        name = 'invert-green',
+                                        handler = {},
+                                        state = false,
+                                    },
+                                },
+                            },
+                            {
+                                type = 'checkbox',
+                                caption = { const:locale('unpowered-empty') },
+                                tooltip = { const:locale('unpowered-empty-description') },
+                                name = 'unpowered-empty',
+                                handler = {},
+                                state = false,
+                            },
+                            {
+                                type = 'label',
+                                style = 'semibold_label',
+                                caption = { const:locale('wagon-stacks') },
+                                tooltip = { const:locale('wagon-stacks-description') },
+                            },
+                            {
+                                type = 'flow',
+                                direction = 'horizontal',
+                                children = {
+                                    {
+                                        type = 'switch',
+                                        name = 'use-wagon-stacks',
+                                        right_label_caption = { 'gui-constant.on' },
+                                        left_label_caption = { 'gui-constant.off' },
+                                        handler = {},
+                                    },
+                                    {
+                                        type = 'empty-widget',
+                                        style_mods = { width = 8 },
+                                    },
+                                    {
+                                        type = 'checkbox',
+                                        caption = { const:locale('process-fluid') },
+                                        tooltip = { const:locale('process-fluid-description') },
+                                        name = 'process-fluid',
+                                        handler = {},
+                                        state = false,
+                                    },
+                                },
+                            },
+                            {
+                                type = 'label',
+                                style = 'semibold_label',
+                                caption = { const:locale('non-item-signals') },
+                                tooltip = { const:locale('non-item-signals-description') },
+                            },
+                            {
+                                type = 'flow',
+                                direction = 'horizontal',
+                                children = {
+                                    {
+                                        type = 'radiobutton',
+                                        style_mods = {
+                                            right_padding = 8,
+                                        },
+                                        caption = { const:locale('non-item-signals-1') },
+                                        tooltip = { const:locale('non-item-signals-description-1') },
+                                        name = 'non-item-signals-1',
+                                        handler = {},
+                                        state = false,
+                                    },
+                                    {
+                                        type = 'radiobutton',
+                                        style_mods = {
+                                            right_padding = 8,
+                                        },
+                                        caption = { const:locale('non-item-signals-2') },
+                                        tooltip = { const:locale('non-item-signals-description-2') },
+                                        name = 'non-item-signals-2',
+                                        handler = {},
+                                        state = false,
+                                    },
+                                    {
+                                        type = 'radiobutton',
+                                        style_mods = {
+                                            right_padding = 8,
+                                        },
+                                        caption = { const:locale('non-item-signals-3') },
+                                        tooltip = { const:locale('non-item-signals-description-3') },
+                                        name = 'non-item-signals-3',
+                                        handler = {},
+                                        state = false,
+                                    },
+                                },
+                            },
+                            {
+                                type = 'table',
+                                column_count = 2,
+                                style_mods = {
+                                    horizontal_spacing = 24,
+                                },
+                                children = {
+                                    {
+                                        type = 'label',
+                                        style = 'semibold_label',
+                                        caption = { 'description.input-signals' },
+                                    },
+                                    {
+                                        type = 'label',
+                                        style = 'semibold_label',
+                                        caption = { 'description.output-signals' },
+                                    },
+                                    {
+                                        type = 'scroll-pane',
+                                        style = 'deep_slots_scroll_pane',
+                                        direction = 'vertical',
+                                        name = 'input-view-pane',
+                                        visible = true,
+                                        vertical_scroll_policy = 'auto-and-reserve-space',
+                                        horizontal_scroll_policy = 'never',
+                                        style_mods = {
+                                            width = 400,
+                                        },
+                                        children = {
+                                            {
+                                                type = 'table',
+                                                style = 'filter_slot_table',
+                                                name = 'input-signal-view',
+                                                column_count = 10,
+                                                style_mods = {
+                                                    vertical_spacing = 4,
+                                                },
+                                            },
+                                        },
+                                    },
+                                    {
+                                        type = 'scroll-pane',
+                                        style = 'deep_slots_scroll_pane',
+                                        direction = 'vertical',
+                                        name = 'output-view-pane',
+                                        visible = true,
+                                        vertical_scroll_policy = 'auto-and-reserve-space',
+                                        horizontal_scroll_policy = 'never',
+                                        style_mods = {
+                                            width = 400,
+                                        },
+                                        children = {
+                                            {
+                                                type = 'table',
+                                                style = 'filter_slot_table',
+                                                name = 'output-signal-view',
+                                                column_count = 10,
+                                                style_mods = {
+                                                    vertical_spacing = 4,
+                                                },
+                                            },
+                                        },
                                     },
                                 },
                             },
