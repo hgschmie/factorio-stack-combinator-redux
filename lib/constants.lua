@@ -9,6 +9,7 @@
 -- globals
 ------------------------------------------------------------------------
 
+---@class stack_combinator.Constants
 local Constants = {
     -- the current version that is the result of the latest migration
     CURRENT_VERSION = 1,

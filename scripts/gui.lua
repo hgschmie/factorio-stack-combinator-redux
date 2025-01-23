@@ -4,14 +4,15 @@
 ------------------------------------------------------------------------
 assert(script)
 
-local Is = require('stdlib.utils.is')
 local Event = require('stdlib.event.event')
 local Player = require('stdlib.event.player')
 local table = require('stdlib.utils.table')
 
 local tools = require('framework.tools')
+local signal_converter = require('framework.signal_converter')
 
 local const = require('lib.constants')
+
 
 ---@class stack_combinator.Gui
 local Gui = {}
@@ -179,21 +180,20 @@ function Gui.getUi(entity_data)
                                         type = 'drop-down',
                                         style = 'circuit_condition_comparator_dropdown',
                                         name = 'operation-mode',
-                                        handler = {},
+                                        handler = { [defines.events.on_gui_selection_state_changed] = Gui.onModeChanged },
                                         items = {
-                                            { const:locale('operation-mode-1') },
-                                            { const:locale('operation-mode-2') },
-                                            { const:locale('operation-mode-3') },
-                                            { const:locale('operation-mode-4') },
-                                            { const:locale('operation-mode-5') },
-                                            { const:locale('operation-mode-6') },
+                                            [const.defines.operations.multiply] = { const:locale('operation-mode-1') },
+                                            [const.defines.operations.divide_ceil] = { const:locale('operation-mode-2') },
+                                            [const.defines.operations.divide_floor] = { const:locale('operation-mode-3') },
+                                            [const.defines.operations.round] = { const:locale('operation-mode-4') },
+                                            [const.defines.operations.ceil] = { const:locale('operation-mode-5') },
+                                            [const.defines.operations.floor] = { const:locale('operation-mode-6') },
                                         },
-                                        selected_index = 3,
                                     },
                                     {
                                         type = 'label',
                                         style = 'label',
-                                        caption = { const:locale('operation-mode-description-3') },
+                                        name = 'operation-mode-description',
                                         style_mods = {
                                             left_padding = 8,
                                         },
@@ -215,15 +215,19 @@ function Gui.getUi(entity_data)
                             },
                             {
                                 type = 'table',
-                                column_count = 2,
+                                column_count = 3,
                                 children = {
                                     -- row 1
                                     {
                                         type = 'checkbox',
-                                        caption = { 'color-capital.red' },
+                                        caption = { 'gui-network-selector.red-label' },
                                         name = 'enable-red',
                                         handler = {},
                                         state = true,
+                                    },
+                                    {
+                                        type = 'empty-widget',
+                                        style_mods = { width = 8 },
                                     },
                                     {
                                         type = 'checkbox',
@@ -235,10 +239,14 @@ function Gui.getUi(entity_data)
                                     -- row 2
                                     {
                                         type = 'checkbox',
-                                        caption = { 'color-capital.green' },
+                                        caption = { 'gui-network-selector.green-label' },
                                         name = 'enable-green',
                                         handler = {},
                                         state = true,
+                                    },
+                                    {
+                                        type = 'empty-widget',
+                                        style_mods = { width = 8 },
                                     },
                                     {
                                         type = 'checkbox',
@@ -336,6 +344,7 @@ function Gui.getUi(entity_data)
                             {
                                 type = 'table',
                                 column_count = 2,
+                                vertical_centering = false,
                                 style_mods = {
                                     horizontal_spacing = 24,
                                 },
@@ -410,15 +419,119 @@ end
 -- helpers
 ----------------------------------------------------------------------------------------------------
 
+---@param gui_element LuaGuiElement?
+---@param entity_data stack_combinator.Data?
+---@return table<string, boolean>
+local function render_network_signals(gui_element, entity_data)
+    local networks = {}
+
+    if not entity_data then return networks end
+
+    assert(gui_element)
+    gui_element.clear()
+
+    for _, color in pairs { 'red', 'green' } do
+        local connector_id = defines.wire_connector_id['combinator_input_' .. color]
+
+        local control = entity_data.main.get_control_behavior()
+        assert(control)
+
+        local network = control.get_circuit_network(connector_id)
+
+
+        if network then
+            networks[color] = true
+            local signal_count = 0
+            for _, signal in ipairs(network.signals or {}) do
+                gui_element.add {
+                    type = 'sprite-button',
+                    sprite = signal_converter:signal_to_sprite_name(signal),
+                    number = signal.count,
+                    style = color .. '_circuit_network_content_slot',
+                    tooltip = signal_converter:signal_to_prototype(signal).localised_name,
+                    elem_tooltip = signal_converter:signal_to_elem_id(signal),
+                    enabled = true,
+                }
+                signal_count = signal_count + 1
+            end
+            while (signal_count % 10) > 0 do
+                gui_element.add {
+                    type = 'sprite',
+                    enabled = true,
+                }
+                signal_count = signal_count + 1
+            end
+        end
+    end
+
+    return networks
+end
+
+---@param gui_element LuaGuiElement?
+---@param entity_data stack_combinator.Data?
+local function render_output_signals(gui_element, entity_data)
+    if not entity_data then return end
+
+    assert(gui_element)
+    gui_element.clear()
+
+    local output = entity_data.output.get_control_behavior() --[[@as LuaConstantCombinatorControlBehavior ]]
+    assert(output)
+
+    assert(output.sections_count == 1)
+    local section = output.sections[1]
+    assert(section.type == defines.logistic_section_type.manual)
+
+    local filters = section.filters
+
+    if not (filters) then return end
+
+    for _, filter in pairs(filters) do
+        if filter.value.name then
+            gui_element.add {
+                type = 'sprite-button',
+                style = 'compact_slot',
+                number = filter.min,
+                sprite = signal_converter:logistic_filter_to_sprite_name(filter),
+                tooltip = signal_converter:logistic_filter_to_prototype(filter).localised_name,
+                elem_tooltip = signal_converter:logistic_filter_to_elem_id(filter),
+                enabled = true,
+            }
+        end
+    end
+end
+
 ---@param gui framework.gui
 ---@param entity_data stack_combinator.Data
 local function update_gui(gui, entity_data)
+    local operation_mode = gui:find_element('operation-mode')
+    operation_mode.selected_index = entity_data.config.op
+
+    local operation_mode_description = gui:find_element('operation-mode-description')
+    operation_mode_description.caption = { const:locale('operation-mode-description-' .. entity_data.config.op) }
 end
 
 ---@param gui framework.gui
 ---@param entity_data stack_combinator.Data
 local function refresh_gui(gui, entity_data)
-    --     render_preview(gui, entity_data)
+    -- render input signals
+    local input_signals = gui:find_element('input-signal-view')
+    local networks = render_network_signals(input_signals, entity_data)
+
+    -- turn enabled and inverted button for the networks on and off
+    for _, color in pairs { 'red', 'green' } do
+        local checkbox = gui:find_element('enable-' .. color)
+        assert(checkbox)
+        local network_enabled = networks[color] or false
+        checkbox.enabled = network_enabled and not entity_data.config.merge_inputs
+        checkbox.tooltip = { 'gui-network-selector.' .. color .. (network_enabled and '-connected' or '-not-connected') }
+        local invert = gui:find_element('invert-' .. color)
+
+        invert.enabled = network_enabled and (checkbox.state or entity_data.config.merge_inputs)
+    end
+
+    local output_signals = gui:find_element('output-signal-view')
+    render_output_signals(output_signals, entity_data)
 
     for _, pin in pairs { 'input', 'output' } do
         local connections = gui:find_element('connections_' .. pin)
@@ -448,6 +561,14 @@ local function refresh_gui(gui, entity_data)
     end
 end
 
+---@param event EventData.on_gui_switch_state_changed|EventData.on_gui_checked_state_changed|EventData.on_gui_elem_changed|EventData.on_gui_selection_state_changed
+---@return stack_combinator.Data? entity_data
+local function locate_entity(event)
+    local gui = Framework.gui_manager:find_gui(event.player_index)
+    if not gui then return nil end
+    return This.StackCombinator:getEntity(gui.entity_id)
+end
+
 ----------------------------------------------------------------------------------------------------
 -- UI Callbacks
 ----------------------------------------------------------------------------------------------------
@@ -457,6 +578,14 @@ end
 ---@param event EventData.on_gui_click|EventData.on_gui_opened
 function Gui.onWindowClosed(event)
     Framework.gui_manager:destroy_gui(event.player_index)
+end
+
+---@param event EventData.on_gui_selection_state_changed
+function Gui.onModeChanged(event)
+    local entity_data = locate_entity(event)
+    if not entity_data then return end
+
+    entity_data.config.op = event.element.selected_index --[[@as stack_combinator.operations ]]
 end
 
 ----------------------------------------------------------------------------------------------------
