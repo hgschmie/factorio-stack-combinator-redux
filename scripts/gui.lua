@@ -129,13 +129,13 @@ function Gui.getUi(entity_data)
                                 children = {
                                     {
                                         type = 'sprite',
-                                        name = 'lamp',
+                                        name = 'status-lamp',
                                         style = 'framework_indicator',
                                     },
                                     {
                                         type = 'label',
                                         style = 'label',
-                                        name = 'status',
+                                        name = 'status-label',
                                     },
                                     {
                                         type = 'empty-widget',
@@ -530,7 +530,7 @@ local function render_output_signals(gui_element, entity_data)
 end
 
 ---@param gui framework.gui
----@param network_state table<string, boolean> Network state, as returned by refresh_gui
+---@param network_state table<defines.wire_connector_id, boolean> Network state, as returned by refresh_gui
 ---@param entity_data stack_combinator.Data
 local function update_gui(gui, network_state, entity_data)
     local config = entity_data.config
@@ -583,6 +583,15 @@ end
 ---@param entity_data stack_combinator.Data
 ---@return table<defines.wire_connector_id, boolean> network_state
 local function refresh_gui(gui, entity_data)
+
+    local entity_status = entity_data.main.status or defines.entity_status.working
+
+    local lamp = gui:find_element('status-lamp')
+    lamp.sprite = tools.STATUS_SPRITES[entity_status]
+
+    local status = gui:find_element('status-label')
+    status.caption = { tools.STATUS_NAMES[entity_status] }
+
     -- render input signals
     local input_signals = gui:find_element('input-signal-view')
     local available_networks = render_network_signals(input_signals, entity_data)
