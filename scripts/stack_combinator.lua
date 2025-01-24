@@ -111,21 +111,25 @@ end
 --- an optional parent.
 ---
 ---@param parent_config stack_combinator.Config?
----@param player_index number
+---@param player_index number?
 ---@return stack_combinator.Config
-local function create_config(parent_config, player_index)
+function StaCo:createConfig(parent_config, player_index)
     ---@type stack_combinator.Config
     local default_config = {
         op = const.defines.operations.multiply,
-        empty_unpowered = Framework.settings:player_setting(const.settings_names.empty_unpowered, player_index),
-        non_item_signals = Framework.settings:player_setting(const.settings.non_item_signals, player_index),
+        empty_unpowered = player_index and Framework.settings:player_setting(const.settings_names.empty_unpowered, player_index) or false,
+        non_item_signals = player_index and tonumber(Framework.settings:player_setting(const.settings_names.non_item_signals, player_index)) or
+            const.defines.non_item_signal_type.drop,
         merge_inputs = false,
         use_wagon_stacks = false,
+        process_fluids = false,
         network_settings = {
             [defines.wire_connector_id.circuit_red] = {
+                enable = true,
                 invert = false,
             },
             [defines.wire_connector_id.circuit_green] = {
+                enable = true,
                 invert = false,
             },
         }
@@ -175,7 +179,7 @@ function StaCo:create(main, player_index, tags)
     local entity_id = main.unit_number --[[@as integer]]
 
     -- if tags were passed in and they contain a config, use that.
-    local config = create_config(tags and tags['sc_config'] --[[@as stack_combinator.Config]], player_index)
+    local config = self:createConfig(tags and tags['sc_config'] --[[@as stack_combinator.Config]], player_index)
     config.status = main.status
 
     ---@type stack_combinator.Data
@@ -267,27 +271,40 @@ local function signal_to_logistic_filter(signal)
     return filter
 end
 
+---@class stack_combinator.WagonStack
+---@field cargo number
+---@field fluid number
+local empty_wagon_stack = {
+    cargo = 1,
+    fluid = 1,
+}
+
 ---@param signals Signal[]
+---@return stack_combinator.WagonStack
 local function compute_wagon_stacks(signals)
-    local wagon_stacks = {}
+    local cargo = 0
+    local fluid = 0
     for _, signal in pairs(signals) do
         local prototype = prototypes.entity[signal.signal.name]
         if Is.Valid(prototype) then
             local cargo_stacks = (prototype.type == 'cargo-wagon') and prototype.get_inventory_size(defines.inventory.cargo_wagon)
             if (cargo_stacks) then
                 cargo_stacks = cargo_stacks * signal.count
-                wagon_stacks.cargo = cargo_stacks + (wagon_stacks.cargo or 0)
+                cargo = cargo + cargo_stacks
             end
 
             local fluid_stack = prototype.type == 'fluid-wagon' and prototype.fluid_capacity
             if (fluid_stack) then
                 fluid_stack = fluid_stack * signal.count
-                wagon_stacks.fluid = fluid_stack + (wagon_stacks.fluid or 0)
+                fluid = fluid + fluid_stack
             end
         end
     end
 
-    return wagon_stacks
+    return {
+        cargo = cargo > 0 and cargo or 1,
+        fluid = fluid > 0 and fluid or 1,
+    }
 end
 
 --- Convert circuit network signal values to their stack sizes
@@ -298,8 +315,8 @@ end
 function StaCo:compute(signals, filters, config, connection_id)
     if not signals then return end
 
-    local wagon_stacks = config.use_wagon_stacks and compute_wagon_stacks(signals) or {}
-    local invert = connection_id and config.network_settings[defines.wire_connector_id] or false
+    local wagon_stacks = config.use_wagon_stacks and compute_wagon_stacks(signals) or empty_wagon_stack
+    local invert = connection_id and config.network_settings[connection_id].invert or false
 
     for _, signal in pairs(signals) do
         local filter = signal_to_logistic_filter(signal)
@@ -310,29 +327,41 @@ function StaCo:compute(signals, filters, config, connection_id)
         assert(name)
         assert(value)
 
-        local process = type == 'item'
-            or config.non_item_signals == const.defines.non_item_signal_type.pass
-            or config.non_item_signals == const.defines.non_item_signal_type.invert
+        -- always process items or when non-item signals are not dropped
+        local process = (type == 'item') or (config.non_item_signals ~= const.defines.non_item_signal_type.drop)
 
-        local prototype = prototypes.entity[name]
-        if (config.use_wagon_stacks and prototype) then
-            process = (type == 'fluid' or (prototype.type ~= 'cargo-wagon' and prototype.type ~= 'fluid-wagon'))
+        -- if wagon_stacks is active, skip cargo-wagon and fluid-wagon
+        if config.use_wagon_stacks and prototypes.entity[name] then
+            local entity_type = prototypes.entity[name].type
+            process = process and not (entity_type == 'cargo-wagon' or entity_type == 'fluid-wagon')
         end
 
-        local multiplier = (invert and (type == 'item' or config.non_item_signals == const.defines.non_item_signal_type.invert)) and -1 or 1
-
         if (process) then
-            local stack = (type == 'item' and (prototypes.item[name].stack_size or 1) * (wagon_stacks.cargo or 1)) or 1
-            stack = (type == 'fluid' and (wagon_stacks.fluid or 1)) or stack
+            local match_item = type == 'item'
+            local match_fluid = config.use_wagon_stacks and config.process_fluids and type == 'fluid'
+
+            local prototype = prototypes.item[name]
+            local multiplier
+            if match_item or match_fluid then
+                multiplier = invert and -1 or 1
+            else
+                multiplier = (config.non_item_signals == const.defines.non_item_signal_type.invert) and -1 or 1
+            end
+
+            local stack = match_item and (prototype.stack_size * (config.use_wagon_stacks and wagon_stacks.cargo or 1)) or 1
+            stack = match_fluid and wagon_stacks.fluid or stack
 
             local result = multiplier * This.StackCombinator.compute_ops[config.op](self, value, stack)
-            local key = create_key(filter.value)
 
-            if (filters[key]) then
-                filters[key].min = filters[key].min + result
-            else
-                filters[key] = filter
-                filters[key].min = result
+            if result ~= 0 then
+                local key = create_key(filter.value)
+
+                if (filters[key]) then
+                    filters[key].min = filters[key].min + result
+                else
+                    filters[key] = filter
+                    filters[key].min = result
+                end
             end
         end
     end
@@ -353,38 +382,39 @@ function StaCo:reconfigure(entity_data)
     local filters = {}
 
     if config.status ~= defines.entity_status.no_power then
-        local networks = {
-            [defines.wire_connector_id.circuit_red] = entity_data.main.get_circuit_network(defines.wire_connector_id.combinator_input_red),
-            [defines.wire_connector_id.circuit_green] = entity_data.main.get_circuit_network(defines.wire_connector_id.combinator_input_green),
-        }
+        ---@type Signal[]
+        local signals = {}
 
-        if config.merge_inputs then
-            ---@type Signal[]
-            local signals = {}
+        for _, connection_id in pairs { defines.wire_connector_id.circuit_red, defines.wire_connector_id.circuit_green } do
+            local network_settings = config.network_settings[connection_id]
+            local network_signals = network_settings.enable and entity_data.main.get_signals(connection_id)
 
-            for connection_id, network in pairs(networks) do
-                local network_settings = config.network_settings[connection_id]
+            if network_signals then
+                if config.merge_inputs then
+                    for _, signal in pairs(network_signals) do
+                        local key = create_key(signal.signal)
+                        local value = util.copy(signal)
+                        value.count = value.count * (network_settings.invert and -1 or 1)
 
-                for _, signal in pairs(network.signals) do
-                    local key = create_key(signal.signal)
-                    local value = util.copy(signal)
-                    value.count = value.count * (network_settings.invert and -1 or 1)
-
-                    if signals[key] then
-                        signals[key].count = signals[key].count + value.count
-                    else
-                        signals[key] = value
+                        if signals[key] then
+                            signals[key].count = signals[key].count + value.count
+                        else
+                            signals[key] = value
+                        end
                     end
+                else
+                    -- not merged, compute separately
+                    self:compute(network_signals, filters, config, connection_id)
                 end
             end
-
-            self:compute(signals, filters, config)
-        else
-            for connection_id, network in pairs(networks) do
-                self:compute(network.signals, filters, config, connection_id)
-            end
         end
-    elseif not config.empty_unpowered then return end
+
+        if config.merge_inputs then
+            self:compute(signals, filters, config)
+        end
+    elseif not config.empty_unpowered then
+        return
+    end
 
     set_filters(entity_data, filters)
 end

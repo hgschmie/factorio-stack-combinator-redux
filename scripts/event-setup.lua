@@ -56,6 +56,10 @@ local function onConfigurationChanged()
             force.recipes[const.stack_combinator_name].enabled = force.technologies['circuit-network'].researched
         end
     end
+
+    for _, entity_data in pairs(This.StackCombinator:entities()) do
+        entity_data.config = This.StackCombinator:createConfig(entity_data.config)
+    end
 end
 
 --------------------------------------------------------------------------------

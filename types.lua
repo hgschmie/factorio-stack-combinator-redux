@@ -24,10 +24,12 @@
 ---@field merge_inputs boolean
 ---@field non_item_signals stack_combinator.non_item_signal_type
 ---@field use_wagon_stacks boolean
+---@field process_fluids boolean
 ---@field network_settings table<defines.wire_connector_id, stack_combinator.NetworkSettings>
 
 ---@class stack_combinator.NetworkSettings
 ---@field invert boolean
+---@field enable boolean
 
 ---@class stack_combinator.Data
 ---@field main LuaEntity

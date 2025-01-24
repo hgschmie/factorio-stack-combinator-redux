@@ -210,7 +210,7 @@ function Gui.getUi(entity_data)
                                 caption = { const:locale('merge-signals') },
                                 tooltip = { const:locale('merge-signals-description') },
                                 name = 'merge-signals',
-                                handler = {},
+                                handler = { [defines.events.on_gui_checked_state_changed] = Gui.onMergeInput },
                                 state = false,
                             },
                             {
@@ -221,8 +221,11 @@ function Gui.getUi(entity_data)
                                     {
                                         type = 'checkbox',
                                         caption = { 'gui-network-selector.red-label' },
-                                        name = 'enable-red',
-                                        handler = {},
+                                        name = 'enable-signals-1',
+                                        elem_tags = {
+                                            wire_connector_id = defines.wire_connector_id.circuit_red,
+                                        },
+                                        handler = { [defines.events.on_gui_checked_state_changed] = Gui.onEnableSignal },
                                         state = true,
                                     },
                                     {
@@ -231,17 +234,23 @@ function Gui.getUi(entity_data)
                                     },
                                     {
                                         type = 'checkbox',
-                                        caption = { const:locale('invert') },
-                                        name = 'invert-red',
-                                        handler = {},
+                                        caption = { const:locale('invert-signals') },
+                                        name = 'invert-signals-1',
+                                        elem_tags = {
+                                            wire_connector_id = defines.wire_connector_id.circuit_red,
+                                        },
+                                        handler = { [defines.events.on_gui_checked_state_changed] = Gui.onInvertSignal },
                                         state = false,
                                     },
                                     -- row 2
                                     {
                                         type = 'checkbox',
                                         caption = { 'gui-network-selector.green-label' },
-                                        name = 'enable-green',
-                                        handler = {},
+                                        name = 'enable-signals-2',
+                                        elem_tags = {
+                                            wire_connector_id = defines.wire_connector_id.circuit_green,
+                                        },
+                                        handler = { [defines.events.on_gui_checked_state_changed] = Gui.onEnableSignal },
                                         state = true,
                                     },
                                     {
@@ -250,9 +259,12 @@ function Gui.getUi(entity_data)
                                     },
                                     {
                                         type = 'checkbox',
-                                        caption = { const:locale('invert') },
-                                        name = 'invert-green',
-                                        handler = {},
+                                        caption = { const:locale('invert-signals') },
+                                        name = 'invert-signals-2',
+                                        elem_tags = {
+                                            wire_connector_id = defines.wire_connector_id.circuit_green,
+                                        },
+                                        handler = { [defines.events.on_gui_checked_state_changed] = Gui.onInvertSignal },
                                         state = false,
                                     },
                                 },
@@ -262,7 +274,7 @@ function Gui.getUi(entity_data)
                                 caption = { const:locale('unpowered-empty') },
                                 tooltip = { const:locale('unpowered-empty-description') },
                                 name = 'unpowered-empty',
-                                handler = {},
+                                handler = { [defines.events.on_gui_checked_state_changed] = Gui.onUnpoweredEmpty },
                                 state = false,
                             },
                             {
@@ -278,9 +290,9 @@ function Gui.getUi(entity_data)
                                     {
                                         type = 'switch',
                                         name = 'use-wagon-stacks',
-                                        right_label_caption = { 'gui-constant.on' },
                                         left_label_caption = { 'gui-constant.off' },
-                                        handler = {},
+                                        right_label_caption = { 'gui-constant.on' },
+                                        handler = { [defines.events.on_gui_switch_state_changed] = Gui.onUseWagonStacks },
                                     },
                                     {
                                         type = 'empty-widget',
@@ -291,7 +303,7 @@ function Gui.getUi(entity_data)
                                         caption = { const:locale('process-fluid') },
                                         tooltip = { const:locale('process-fluid-description') },
                                         name = 'process-fluid',
-                                        handler = {},
+                                        handler = { [defines.events.on_gui_checked_state_changed] = Gui.onProcessFluid },
                                         state = false,
                                     },
                                 },
@@ -314,7 +326,10 @@ function Gui.getUi(entity_data)
                                         caption = { const:locale('non-item-signals-1') },
                                         tooltip = { const:locale('non-item-signals-description-1') },
                                         name = 'non-item-signals-1',
-                                        handler = {},
+                                        elem_tags = {
+                                            non_item_signal = const.defines.non_item_signal_type.pass,
+                                        },
+                                        handler = { [defines.events.on_gui_checked_state_changed] = Gui.onNonItemSignals },
                                         state = false,
                                     },
                                     {
@@ -325,7 +340,10 @@ function Gui.getUi(entity_data)
                                         caption = { const:locale('non-item-signals-2') },
                                         tooltip = { const:locale('non-item-signals-description-2') },
                                         name = 'non-item-signals-2',
-                                        handler = {},
+                                        elem_tags = {
+                                            non_item_signal = const.defines.non_item_signal_type.invert,
+                                        },
+                                        handler = { [defines.events.on_gui_checked_state_changed] = Gui.onNonItemSignals },
                                         state = false,
                                     },
                                     {
@@ -336,7 +354,10 @@ function Gui.getUi(entity_data)
                                         caption = { const:locale('non-item-signals-3') },
                                         tooltip = { const:locale('non-item-signals-description-3') },
                                         name = 'non-item-signals-3',
-                                        handler = {},
+                                        elem_tags = {
+                                            non_item_signal = const.defines.non_item_signal_type.drop,
+                                        },
+                                        handler = { [defines.events.on_gui_checked_state_changed] = Gui.onNonItemSignals },
                                         state = false,
                                     },
                                 },
@@ -419,9 +440,23 @@ end
 -- helpers
 ----------------------------------------------------------------------------------------------------
 
+
+local color_map = {
+    [defines.wire_connector_id.circuit_red] = 'red',
+    [defines.wire_connector_id.circuit_green] = 'green',
+}
+
+local on_off_values = {
+    left = false,
+    right = true,
+}
+
+local values_on_off = table.invert(on_off_values)
+
+
 ---@param gui_element LuaGuiElement?
 ---@param entity_data stack_combinator.Data?
----@return table<string, boolean>
+---@return table<defines.wire_connector_id, boolean>
 local function render_network_signals(gui_element, entity_data)
     local networks = {}
 
@@ -430,24 +465,17 @@ local function render_network_signals(gui_element, entity_data)
     assert(gui_element)
     gui_element.clear()
 
-    for _, color in pairs { 'red', 'green' } do
-        local connector_id = defines.wire_connector_id['combinator_input_' .. color]
-
-        local control = entity_data.main.get_control_behavior()
-        assert(control)
-
-        local network = control.get_circuit_network(connector_id)
-
-
-        if network then
-            networks[color] = true
+    for _, connector_id in pairs { defines.wire_connector_id.circuit_red, defines.wire_connector_id.circuit_green } do
+        local signals = entity_data.main.get_signals(connector_id) or {}
+        if signals then
+            networks[connector_id] = true
             local signal_count = 0
-            for _, signal in ipairs(network.signals or {}) do
+            for _, signal in ipairs(signals) do
                 gui_element.add {
                     type = 'sprite-button',
                     sprite = signal_converter:signal_to_sprite_name(signal),
                     number = signal.count,
-                    style = color .. '_circuit_network_content_slot',
+                    style = color_map[connector_id] .. '_circuit_network_content_slot',
                     tooltip = signal_converter:signal_to_prototype(signal).localised_name,
                     elem_tooltip = signal_converter:signal_to_elem_id(signal),
                     enabled = true,
@@ -502,37 +530,68 @@ local function render_output_signals(gui_element, entity_data)
 end
 
 ---@param gui framework.gui
+---@param network_state table<string, boolean> Network state, as returned by refresh_gui
 ---@param entity_data stack_combinator.Data
-local function update_gui(gui, entity_data)
-    local operation_mode = gui:find_element('operation-mode')
-    operation_mode.selected_index = entity_data.config.op
+local function update_gui(gui, network_state, entity_data)
+    local config = entity_data.config
 
+    local operation_mode = gui:find_element('operation-mode')
+    operation_mode.selected_index = config.op
     local operation_mode_description = gui:find_element('operation-mode-description')
-    operation_mode_description.caption = { const:locale('operation-mode-description-' .. entity_data.config.op) }
+    operation_mode_description.caption = { const:locale('operation-mode-description-' .. config.op) }
+
+    local merge_signals = gui:find_element('merge-signals')
+    merge_signals.state = config.merge_inputs
+
+    -- turn enabled and inverted button for the networks on and off and handle tooltips
+    for _, connection_id in pairs { defines.wire_connector_id.circuit_red, defines.wire_connector_id.circuit_green } do
+        local network_settings = config.network_settings[connection_id]
+        local checkbox = gui:find_element('enable-signals-' .. connection_id)
+
+        local network_enabled = network_state[connection_id] or false
+        checkbox.state = network_settings.enable
+        checkbox.enabled = network_enabled and not config.merge_inputs
+        checkbox.tooltip = {
+            'gui-network-selector.' .. (config.merge_inputs and 'not-relevant'
+                or (color_map[connection_id] .. (network_enabled and '-connected' or '-not-connected')))
+        }
+
+        local invert = gui:find_element('invert-signals-' .. connection_id)
+        local enabled = network_enabled and (network_settings.enable or config.merge_inputs)
+        invert.state = network_settings.invert
+        invert.enabled = enabled
+        invert.tooltip = enabled and { const:locale('invert-signals-description-' .. connection_id) } or nil
+    end
+
+    local unpowered_empty = gui:find_element('unpowered-empty')
+    unpowered_empty.state = config.empty_unpowered
+
+    local use_wagon_stacks = gui:find_element('use-wagon-stacks')
+    use_wagon_stacks.switch_state = values_on_off[config.use_wagon_stacks]
+
+    local process_fluid = gui:find_element('process-fluid')
+    process_fluid.state = config.process_fluids or false
+    process_fluid.enabled = config.use_wagon_stacks
+
+    for _, value in pairs(const.defines.non_item_signal_type) do
+        local radio_button = gui:find_element('non-item-signals-' .. tostring(value))
+        radio_button.state = config.non_item_signals == value
+    end
 end
 
 ---@param gui framework.gui
 ---@param entity_data stack_combinator.Data
+---@return table<defines.wire_connector_id, boolean> network_state
 local function refresh_gui(gui, entity_data)
     -- render input signals
     local input_signals = gui:find_element('input-signal-view')
-    local networks = render_network_signals(input_signals, entity_data)
+    local available_networks = render_network_signals(input_signals, entity_data)
 
-    -- turn enabled and inverted button for the networks on and off
-    for _, color in pairs { 'red', 'green' } do
-        local checkbox = gui:find_element('enable-' .. color)
-        assert(checkbox)
-        local network_enabled = networks[color] or false
-        checkbox.enabled = network_enabled and not entity_data.config.merge_inputs
-        checkbox.tooltip = { 'gui-network-selector.' .. color .. (network_enabled and '-connected' or '-not-connected') }
-        local invert = gui:find_element('invert-' .. color)
-
-        invert.enabled = network_enabled and (checkbox.state or entity_data.config.merge_inputs)
-    end
-
+    -- render output signals
     local output_signals = gui:find_element('output-signal-view')
     render_output_signals(output_signals, entity_data)
 
+    -- render network ids for Input/Output network header
     for _, pin in pairs { 'input', 'output' } do
         local connections = gui:find_element('connections_' .. pin)
         connections.caption = { 'gui-control-behavior.not-connected' }
@@ -559,6 +618,8 @@ local function refresh_gui(gui, entity_data)
             end
         end
     end
+
+    return available_networks
 end
 
 ---@param event EventData.on_gui_switch_state_changed|EventData.on_gui_checked_state_changed|EventData.on_gui_elem_changed|EventData.on_gui_selection_state_changed
@@ -586,6 +647,72 @@ function Gui.onModeChanged(event)
     if not entity_data then return end
 
     entity_data.config.op = event.element.selected_index --[[@as stack_combinator.operations ]]
+end
+
+---@param event EventData.on_gui_checked_state_changed
+function Gui.onMergeInput(event)
+    local entity_data = locate_entity(event)
+    if not entity_data then return end
+
+    -- Update the merge signals configuration based on the checkbox state
+    entity_data.config.merge_inputs = event.element.state
+end
+
+---@param event EventData.on_gui_checked_state_changed
+function Gui.onEnableSignal(event)
+    local entity_data = locate_entity(event)
+    if not entity_data then return end
+
+    local wire_connector_id = event.element.tags and event.element.tags['wire_connector_id']
+    if not wire_connector_id then return end
+
+    entity_data.config.network_settings[wire_connector_id].enable = event.element.state
+end
+
+---@param event EventData.on_gui_checked_state_changed
+function Gui.onInvertSignal(event)
+    local entity_data = locate_entity(event)
+    if not entity_data then return end
+
+    local wire_connector_id = event.element.tags and event.element.tags['wire_connector_id']
+    if not wire_connector_id then return end
+
+    entity_data.config.network_settings[wire_connector_id].invert = event.element.state
+end
+
+---@param event EventData.on_gui_checked_state_changed
+function Gui.onUnpoweredEmpty(event)
+    local entity_data = locate_entity(event)
+    if not entity_data then return end
+
+    entity_data.config.empty_unpowered = event.element.state
+end
+
+---@param event EventData.on_gui_switch_state_changed
+function Gui.onUseWagonStacks(event)
+    local entity_data = locate_entity(event)
+    if not entity_data then return end
+
+    entity_data.config.use_wagon_stacks = on_off_values[event.element.switch_state]
+end
+
+---@param event EventData.on_gui_checked_state_changed
+function Gui.onProcessFluid(event)
+    local entity_data = locate_entity(event)
+    if not entity_data then return end
+
+    entity_data.config.process_fluids = event.element.state
+end
+
+---@param event EventData.on_gui_checked_state_changed
+function Gui.onNonItemSignals(event)
+    local entity_data = locate_entity(event)
+    if not entity_data then return end
+
+    local non_item_signal = event.element.tags and event.element.tags['non_item_signal']
+    if not non_item_signal then return end
+
+    entity_data.config.non_item_signals = non_item_signal
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -654,13 +781,13 @@ function Gui.guiUpdater(gui)
     ---@type stack_combinator.GuiContext
     local context = gui.context
 
+    -- always update wire state and preview
+    local network_state = refresh_gui(gui, entity_data)
+
     if not (context.last_config and table.compare(context.last_config, entity_data.config)) then
-        update_gui(gui, entity_data)
+        update_gui(gui, network_state, entity_data)
         context.last_config = tools.copy(entity_data.config)
     end
-
-    -- always update wire state and preview
-    refresh_gui(gui, entity_data)
 
     return true
 end
