@@ -271,10 +271,10 @@ function Gui.getUi(entity_data)
                             },
                             {
                                 type = 'checkbox',
-                                caption = { const:locale('unpowered-empty') },
-                                tooltip = { const:locale('unpowered-empty-description') },
-                                name = 'unpowered-empty',
-                                handler = { [defines.events.on_gui_checked_state_changed] = Gui.onUnpoweredEmpty },
+                                caption = { const:locale('empty-unpowered') },
+                                tooltip = { const:locale('empty-unpowered-description') },
+                                name = 'empty-unpowered',
+                                handler = { [defines.events.on_gui_checked_state_changed] = Gui.onEmptyUnpowered },
                                 state = false,
                             },
                             {
@@ -563,8 +563,8 @@ local function update_gui(gui, network_state, entity_data)
         invert.tooltip = enabled and { const:locale('invert-signals-description-' .. connection_id) } or nil
     end
 
-    local unpowered_empty = gui:find_element('unpowered-empty')
-    unpowered_empty.state = config.empty_unpowered
+    local empty_unpowered = gui:find_element('empty-unpowered')
+    empty_unpowered.state = config.empty_unpowered
 
     local use_wagon_stacks = gui:find_element('use-wagon-stacks')
     use_wagon_stacks.switch_state = values_on_off[config.use_wagon_stacks]
@@ -681,7 +681,7 @@ function Gui.onInvertSignal(event)
 end
 
 ---@param event EventData.on_gui_checked_state_changed
-function Gui.onUnpoweredEmpty(event)
+function Gui.onEmptyUnpowered(event)
     local entity_data = locate_entity(event)
     if not entity_data then return end
 
