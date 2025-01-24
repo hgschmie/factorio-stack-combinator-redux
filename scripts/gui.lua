@@ -207,9 +207,9 @@ function Gui.getUi(entity_data)
                             },
                             {
                                 type = 'checkbox',
-                                caption = { const:locale('merge-signals') },
-                                tooltip = { const:locale('merge-signals-description') },
-                                name = 'merge-signals',
+                                caption = { const:locale('merge-inputs') },
+                                tooltip = { const:locale('merge-inputs-description') },
+                                name = 'merge-inputs',
                                 handler = { [defines.events.on_gui_checked_state_changed] = Gui.onMergeInput },
                                 state = false,
                             },
@@ -540,8 +540,8 @@ local function update_gui(gui, network_state, entity_data)
     local operation_mode_description = gui:find_element('operation-mode-description')
     operation_mode_description.caption = { const:locale('operation-mode-description-' .. config.op) }
 
-    local merge_signals = gui:find_element('merge-signals')
-    merge_signals.state = config.merge_inputs
+    local merge_inputs = gui:find_element('merge-inputs')
+    merge_inputs.state = config.merge_inputs
 
     -- turn enabled and inverted button for the networks on and off and handle tooltips
     for _, connection_id in pairs { defines.wire_connector_id.circuit_red, defines.wire_connector_id.circuit_green } do
@@ -663,7 +663,7 @@ function Gui.onMergeInput(event)
     local entity_data = locate_entity(event)
     if not entity_data then return end
 
-    -- Update the merge signals configuration based on the checkbox state
+    -- Update the merge input configuration based on the checkbox state
     entity_data.config.merge_inputs = event.element.state
 end
 
