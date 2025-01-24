@@ -466,7 +466,7 @@ local function render_network_signals(gui_element, entity_data)
     gui_element.clear()
 
     for _, connector_id in pairs { defines.wire_connector_id.circuit_red, defines.wire_connector_id.circuit_green } do
-        local signals = entity_data.main.get_signals(connector_id) or {}
+        local signals = entity_data.main.get_signals(connector_id)
         if signals then
             networks[connector_id] = true
             local signal_count = 0
