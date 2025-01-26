@@ -28,7 +28,7 @@ function Gui.getUi(entity_data)
         type = 'frame',
         name = 'gui_root',
         direction = 'vertical',
-        handler = { [defines.events.on_gui_closed] = Gui.onWindowClosed },
+        handler = { [defines.events.on_gui_closed] = on_window_closed },
         elem_mods = { auto_center = true },
         children = {
             { -- Title Bar
@@ -55,7 +55,7 @@ function Gui.getUi(entity_data)
                         hovered_sprite = 'utility/close_black',
                         clicked_sprite = 'utility/close_black',
                         mouse_button_filter = { 'left' },
-                        handler = { [defines.events.on_gui_click] = Gui.onWindowClosed },
+                        handler = { [defines.events.on_gui_click] = on_window_closed },
                     },
                 },
             }, -- Title Bar End
@@ -471,7 +471,7 @@ local function render_network_signals(gui_element, entity_data)
             networks[connector_id] = true
             local signal_count = 0
             for _, signal in ipairs(signals) do
-                gui_element.add {
+                local button = gui_element.add {
                     type = 'sprite-button',
                     sprite = signal_converter:signal_to_sprite_name(signal),
                     number = signal.count,
@@ -480,6 +480,14 @@ local function render_network_signals(gui_element, entity_data)
                     elem_tooltip = signal_converter:signal_to_elem_id(signal),
                     enabled = true,
                 }
+                if signal.signal.quality and signal.signal.quality ~= 'normal' then
+                    button.add {
+                        type = 'sprite',
+                        style = 'framework_quality',
+                        sprite = 'quality/' .. signal.signal.quality,
+                        enabled = true,
+                    }
+                end
                 signal_count = signal_count + 1
             end
             while (signal_count % 10) > 0 do
@@ -516,7 +524,7 @@ local function render_output_signals(gui_element, entity_data)
 
     for _, filter in pairs(filters) do
         if filter.value.name then
-            gui_element.add {
+            local button = gui_element.add {
                 type = 'sprite-button',
                 style = 'compact_slot',
                 number = filter.min,
@@ -525,6 +533,14 @@ local function render_output_signals(gui_element, entity_data)
                 elem_tooltip = signal_converter:logistic_filter_to_elem_id(filter),
                 enabled = true,
             }
+            if filter.value.quality and filter.value.quality ~= 'normal' then
+                button.add {
+                    type = 'sprite',
+                    style = 'framework_quality',
+                    sprite = 'quality/' .. filter.value.quality,
+                    enabled = true,
+                }
+            end
         end
     end
 end
@@ -583,7 +599,6 @@ end
 ---@param entity_data stack_combinator.Data
 ---@return table<defines.wire_connector_id, boolean> network_state
 local function refresh_gui(gui, entity_data)
-
     local entity_status = entity_data.main.status or defines.entity_status.working
 
     local lamp = gui:find_element('status-lamp')
