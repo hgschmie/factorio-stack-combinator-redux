@@ -15,20 +15,49 @@ local const = require('lib.constants')
 
 
 ---@class stack_combinator.Gui
-local Gui = {}
+---@field NAME string
+local Gui = {
+    NAME = 'combinator-gui',
+}
 
 ----------------------------------------------------------------------------------------------------
 -- UI definition
 ----------------------------------------------------------------------------------------------------
 
----@param entity_data stack_combinator.Data
+--- Provides all the events used by the GUI and their mappings to functions. This must be outside the
+--- GUI definition as it can not be serialized into storage.
+---@return framework.gui_manager.event_definition
+local function get_gui_event_definition()
+    return {
+        events = {
+            onWindowClosed = Gui.onWindowClosed,
+            onModeChanged = Gui.onModeChanged,
+            onMergeInput = Gui.onMergeInput,
+            onEnableSignal = Gui.onEnableSignal,
+            onInvertSignal = Gui.onInvertSignal,
+            onEmptyUnpowered = Gui.onEmptyUnpowered,
+            onUseWagonStacks = Gui.onUseWagonStacks,
+            onProcessFluid = Gui.onProcessFluid,
+            onNonItemSignals = Gui.onNonItemSignals,
+        },
+        callback = Gui.guiUpdater,
+    }
+end
+
+--- Returns the definition of the GUI. All events must be mapped onto constants from the gui_events array.
+---@param gui framework.gui
 ---@return framework.gui.element_definition ui
-function Gui.getUi(entity_data)
+function Gui.getUi(gui)
+    local gui_events = gui.gui_events
+
+    local entity_data = This.StackCombinator:getEntity(gui.entity_id)
+    assert(entity_data)
+
     return {
         type = 'frame',
         name = 'gui_root',
         direction = 'vertical',
-        handler = { [defines.events.on_gui_closed] = on_window_closed },
+        handler = { [defines.events.on_gui_closed] = gui_events.onWindowClosed },
         elem_mods = { auto_center = true },
         children = {
             { -- Title Bar
@@ -55,7 +84,7 @@ function Gui.getUi(entity_data)
                         hovered_sprite = 'utility/close_black',
                         clicked_sprite = 'utility/close_black',
                         mouse_button_filter = { 'left' },
-                        handler = { [defines.events.on_gui_click] = on_window_closed },
+                        handler = { [defines.events.on_gui_click] = gui_events.onWindowClosed },
                     },
                 },
             }, -- Title Bar End
@@ -180,7 +209,7 @@ function Gui.getUi(entity_data)
                                         type = 'drop-down',
                                         style = 'circuit_condition_comparator_dropdown',
                                         name = 'operation-mode',
-                                        handler = { [defines.events.on_gui_selection_state_changed] = Gui.onModeChanged },
+                                        handler = { [defines.events.on_gui_selection_state_changed] = gui_events.onModeChanged },
                                         items = {
                                             [const.defines.operations.multiply] = { const:locale('operation-mode-1') },
                                             [const.defines.operations.divide_ceil] = { const:locale('operation-mode-2') },
@@ -210,7 +239,7 @@ function Gui.getUi(entity_data)
                                 caption = { const:locale('merge-inputs') },
                                 tooltip = { const:locale('merge-inputs-description') },
                                 name = 'merge-inputs',
-                                handler = { [defines.events.on_gui_checked_state_changed] = Gui.onMergeInput },
+                                handler = { [defines.events.on_gui_checked_state_changed] = gui_events.onMergeInput },
                                 state = false,
                             },
                             {
@@ -225,7 +254,7 @@ function Gui.getUi(entity_data)
                                         elem_tags = {
                                             wire_connector_id = defines.wire_connector_id.circuit_red,
                                         },
-                                        handler = { [defines.events.on_gui_checked_state_changed] = Gui.onEnableSignal },
+                                        handler = { [defines.events.on_gui_checked_state_changed] = gui_events.onEnableSignal },
                                         state = true,
                                     },
                                     {
@@ -239,7 +268,7 @@ function Gui.getUi(entity_data)
                                         elem_tags = {
                                             wire_connector_id = defines.wire_connector_id.circuit_red,
                                         },
-                                        handler = { [defines.events.on_gui_checked_state_changed] = Gui.onInvertSignal },
+                                        handler = { [defines.events.on_gui_checked_state_changed] = gui_events.onInvertSignal },
                                         state = false,
                                     },
                                     -- row 2
@@ -250,7 +279,7 @@ function Gui.getUi(entity_data)
                                         elem_tags = {
                                             wire_connector_id = defines.wire_connector_id.circuit_green,
                                         },
-                                        handler = { [defines.events.on_gui_checked_state_changed] = Gui.onEnableSignal },
+                                        handler = { [defines.events.on_gui_checked_state_changed] = gui_events.onEnableSignal },
                                         state = true,
                                     },
                                     {
@@ -264,7 +293,7 @@ function Gui.getUi(entity_data)
                                         elem_tags = {
                                             wire_connector_id = defines.wire_connector_id.circuit_green,
                                         },
-                                        handler = { [defines.events.on_gui_checked_state_changed] = Gui.onInvertSignal },
+                                        handler = { [defines.events.on_gui_checked_state_changed] = gui_events.onInvertSignal },
                                         state = false,
                                     },
                                 },
@@ -274,7 +303,7 @@ function Gui.getUi(entity_data)
                                 caption = { const:locale('empty-unpowered') },
                                 tooltip = { const:locale('empty-unpowered-description') },
                                 name = 'empty-unpowered',
-                                handler = { [defines.events.on_gui_checked_state_changed] = Gui.onEmptyUnpowered },
+                                handler = { [defines.events.on_gui_checked_state_changed] = gui_events.onEmptyUnpowered },
                                 state = false,
                             },
                             {
@@ -292,7 +321,7 @@ function Gui.getUi(entity_data)
                                         name = 'use-wagon-stacks',
                                         left_label_caption = { 'gui-constant.off' },
                                         right_label_caption = { 'gui-constant.on' },
-                                        handler = { [defines.events.on_gui_switch_state_changed] = Gui.onUseWagonStacks },
+                                        handler = { [defines.events.on_gui_switch_state_changed] = gui_events.onUseWagonStacks },
                                     },
                                     {
                                         type = 'empty-widget',
@@ -303,7 +332,7 @@ function Gui.getUi(entity_data)
                                         caption = { const:locale('process-fluid') },
                                         tooltip = { const:locale('process-fluid-description') },
                                         name = 'process-fluid',
-                                        handler = { [defines.events.on_gui_checked_state_changed] = Gui.onProcessFluid },
+                                        handler = { [defines.events.on_gui_checked_state_changed] = gui_events.onProcessFluid },
                                         state = false,
                                     },
                                 },
@@ -329,7 +358,7 @@ function Gui.getUi(entity_data)
                                         elem_tags = {
                                             non_item_signal = const.defines.non_item_signal_type.pass,
                                         },
-                                        handler = { [defines.events.on_gui_checked_state_changed] = Gui.onNonItemSignals },
+                                        handler = { [defines.events.on_gui_checked_state_changed] = gui_events.onNonItemSignals },
                                         state = false,
                                     },
                                     {
@@ -343,7 +372,7 @@ function Gui.getUi(entity_data)
                                         elem_tags = {
                                             non_item_signal = const.defines.non_item_signal_type.invert,
                                         },
-                                        handler = { [defines.events.on_gui_checked_state_changed] = Gui.onNonItemSignals },
+                                        handler = { [defines.events.on_gui_checked_state_changed] = gui_events.onNonItemSignals },
                                         state = false,
                                     },
                                     {
@@ -357,7 +386,7 @@ function Gui.getUi(entity_data)
                                         elem_tags = {
                                             non_item_signal = const.defines.non_item_signal_type.drop,
                                         },
-                                        handler = { [defines.events.on_gui_checked_state_changed] = Gui.onNonItemSignals },
+                                        handler = { [defines.events.on_gui_checked_state_changed] = gui_events.onNonItemSignals },
                                         state = false,
                                     },
                                 },
@@ -440,7 +469,6 @@ end
 -- helpers
 ----------------------------------------------------------------------------------------------------
 
-
 local color_map = {
     [defines.wire_connector_id.circuit_red] = 'red',
     [defines.wire_connector_id.circuit_green] = 'green',
@@ -452,7 +480,6 @@ local on_off_values = {
 }
 
 local values_on_off = table.invert(on_off_values)
-
 
 ---@param gui_element LuaGuiElement?
 ---@param entity_data stack_combinator.Data?
@@ -595,9 +622,13 @@ local function update_gui(gui, network_state, entity_data)
     end
 end
 
+---@class stack_combinator.State
+---@field network_state table<defines.wire_connector_id, boolean>
+---@field connection_state table<string, boolean>
+
 ---@param gui framework.gui
 ---@param entity_data stack_combinator.Data
----@return table<defines.wire_connector_id, boolean> network_state
+---@return stack_combinator.State
 local function refresh_gui(gui, entity_data)
     local entity_status = entity_data.main.status or defines.entity_status.working
 
@@ -609,11 +640,16 @@ local function refresh_gui(gui, entity_data)
 
     -- render input signals
     local input_signals = gui:find_element('input-signal-view')
-    local available_networks = render_network_signals(input_signals, entity_data)
+    local network_state = render_network_signals(input_signals, entity_data)
 
     -- render output signals
     local output_signals = gui:find_element('output-signal-view')
     render_output_signals(output_signals, entity_data)
+
+    local state = {
+        network_state = network_state,
+        connection_state = {},
+    }
 
     -- render network ids for Input/Output network header
     for _, pin in pairs { 'input', 'output' } do
@@ -626,33 +662,35 @@ local function refresh_gui(gui, entity_data)
             local connect = false
 
             local wire_connection = gui:find_element(pin_name)
+            wire_connection.caption = nil
+
             if wire_connector then
                 for _, connection in pairs(wire_connector.connections) do
                     connect = connect or (connection.origin == defines.wire_origin.player)
                     if connect then break end
                 end
             end
+
+            state.connection_state[pin_name] = connect
+            wire_connection.visible = connect
             if connect then
                 connections.caption = { 'gui-control-behavior.connected-to-network' }
-                wire_connection.visible = true
                 wire_connection.caption = { ('gui-control-behavior.%s-network-id'):format(color), wire_connector.network_id }
-            else
-                wire_connection.visible = false
-                wire_connection.caption = nil
             end
         end
     end
 
-    return available_networks
+    local context = gui.context
+
+    if not (context.state and table.compare(context.state, state)) then
+        update_gui(gui, network_state, entity_data)
+        context.last_config = tools.copy(entity_data.config)
+    end
+
+    return state
 end
 
----@param event EventData.on_gui_switch_state_changed|EventData.on_gui_checked_state_changed|EventData.on_gui_elem_changed|EventData.on_gui_selection_state_changed
----@return stack_combinator.Data? entity_data
-local function locate_entity(event)
-    local gui = Framework.gui_manager:find_gui(event.player_index)
-    if not gui then return nil end
-    return This.StackCombinator:getEntity(gui.entity_id)
-end
+
 
 ----------------------------------------------------------------------------------------------------
 -- UI Callbacks
@@ -666,16 +704,18 @@ function Gui.onWindowClosed(event)
 end
 
 ---@param event EventData.on_gui_selection_state_changed
-function Gui.onModeChanged(event)
-    local entity_data = locate_entity(event)
+---@param gui framework.gui
+function Gui.onModeChanged(event, gui)
+    local entity_data = This.StackCombinator:getEntity(gui.entity_id)
     if not entity_data then return end
 
     entity_data.config.op = event.element.selected_index --[[@as stack_combinator.operations ]]
 end
 
 ---@param event EventData.on_gui_checked_state_changed
-function Gui.onMergeInput(event)
-    local entity_data = locate_entity(event)
+---@param gui framework.gui
+function Gui.onMergeInput(event, gui)
+    local entity_data = This.StackCombinator:getEntity(gui.entity_id)
     if not entity_data then return end
 
     -- Update the merge input configuration based on the checkbox state
@@ -683,8 +723,9 @@ function Gui.onMergeInput(event)
 end
 
 ---@param event EventData.on_gui_checked_state_changed
-function Gui.onEnableSignal(event)
-    local entity_data = locate_entity(event)
+---@param gui framework.gui
+function Gui.onEnableSignal(event, gui)
+    local entity_data = This.StackCombinator:getEntity(gui.entity_id)
     if not entity_data then return end
 
     local wire_connector_id = event.element.tags and event.element.tags['wire_connector_id']
@@ -694,8 +735,9 @@ function Gui.onEnableSignal(event)
 end
 
 ---@param event EventData.on_gui_checked_state_changed
-function Gui.onInvertSignal(event)
-    local entity_data = locate_entity(event)
+---@param gui framework.gui
+function Gui.onInvertSignal(event, gui)
+    local entity_data = This.StackCombinator:getEntity(gui.entity_id)
     if not entity_data then return end
 
     local wire_connector_id = event.element.tags and event.element.tags['wire_connector_id']
@@ -705,32 +747,36 @@ function Gui.onInvertSignal(event)
 end
 
 ---@param event EventData.on_gui_checked_state_changed
-function Gui.onEmptyUnpowered(event)
-    local entity_data = locate_entity(event)
+---@param gui framework.gui
+function Gui.onEmptyUnpowered(event, gui)
+    local entity_data = This.StackCombinator:getEntity(gui.entity_id)
     if not entity_data then return end
 
     entity_data.config.empty_unpowered = event.element.state
 end
 
 ---@param event EventData.on_gui_switch_state_changed
-function Gui.onUseWagonStacks(event)
-    local entity_data = locate_entity(event)
+---@param gui framework.gui
+function Gui.onUseWagonStacks(event, gui)
+    local entity_data = This.StackCombinator:getEntity(gui.entity_id)
     if not entity_data then return end
 
     entity_data.config.use_wagon_stacks = on_off_values[event.element.switch_state]
 end
 
 ---@param event EventData.on_gui_checked_state_changed
-function Gui.onProcessFluid(event)
-    local entity_data = locate_entity(event)
+---@param gui framework.gui
+function Gui.onProcessFluid(event, gui)
+    local entity_data = This.StackCombinator:getEntity(gui.entity_id)
     if not entity_data then return end
 
     entity_data.config.process_fluids = event.element.state
 end
 
 ---@param event EventData.on_gui_checked_state_changed
-function Gui.onNonItemSignals(event)
-    local entity_data = locate_entity(event)
+---@param gui framework.gui
+function Gui.onNonItemSignals(event, gui)
+    local entity_data = This.StackCombinator:getEntity(gui.entity_id)
     if not entity_data then return end
 
     local non_item_signal = event.element.tags and event.element.tags['non_item_signal']
@@ -769,16 +815,18 @@ function Gui.onGuiOpened(event)
 
     ---@class stack_combinator.GuiContext
     ---@field last_config stack_combinator.Config?
+    ---@field last_connection_state table<string, boolean>?
     local gui_state = {
         last_config = nil,
+        last_connection_state = nil,
     }
 
     local gui = Framework.gui_manager:create_gui {
+        type = Gui.NAME,
         player_index = event.player_index,
         parent = player.gui.screen,
-        ui_tree = Gui.getUi(entity_data),
+        ui_tree_provider = Gui.getUi,
         context = gui_state,
-        update_callback = Gui.guiUpdater,
         entity_id = entity.unit_number
     }
 
@@ -806,11 +854,21 @@ function Gui.guiUpdater(gui)
     local context = gui.context
 
     -- always update wire state and preview
-    local network_state = refresh_gui(gui, entity_data)
+    local state = refresh_gui(gui, entity_data)
 
-    if not (context.last_config and table.compare(context.last_config, entity_data.config)) then
-        update_gui(gui, network_state, entity_data)
+    local refresh_config = not (context.last_config and table.compare(context.last_config, entity_data.config))
+    local refresh_state = not (context.last_connection_state and table.compare(context.last_connection_state, state.connection_state))
+
+    if refresh_config or refresh_state then
+        update_gui(gui, state.network_state, entity_data)
+    end
+
+    if refresh_config then
         context.last_config = tools.copy(entity_data.config)
+    end
+
+    if refresh_state then
+        context.last_connection_state = state.connection_state
     end
 
     return true
@@ -820,7 +878,9 @@ end
 -- event registration
 --------------------------------------------------------------------------------
 
-local function register_events()
+local function init_gui()
+    Framework.gui_manager:register_gui_type(Gui.NAME, get_gui_event_definition())
+
     local entity_filter = tools.create_event_entity_matcher('name', const.main_entity_names)
     local ghost_entity_filter = tools.create_event_ghost_entity_matcher('ghost_name', const.main_entity_names)
 
@@ -829,17 +889,5 @@ local function register_events()
     Event.on_event(defines.events.on_gui_opened, Gui.onGhostGuiOpened, ghost_entity_filter)
 end
 
---------------------------------------------------------------------------------
--- mod init/load code
---------------------------------------------------------------------------------
-
-local function on_load()
-    register_events()
-end
-
-local function on_init()
-    register_events()
-end
-
-Event.on_init(on_init)
-Event.on_load(on_load)
+Event.on_init(init_gui)
+Event.on_load(init_gui)

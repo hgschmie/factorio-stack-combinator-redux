@@ -217,7 +217,7 @@ end
 ------------------------------------------------------------------------
 
 local MAX = 2 ^ 31 - 1
-local MIN = -2 ^ 32
+local MIN = -2 ^ 31
 
 ---@param entity_data stack_combinator.Data
 ---@param filters table<string, LogisticFilter>
