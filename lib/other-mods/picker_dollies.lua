@@ -44,6 +44,7 @@ PickerDolliesSupport.runtime = function()
             remote.call('PickerDollies', 'add_oblong_name', const.stack_combinator_name)
         end
     end
+
     Event.on_init(picker_dollies_init)
     Event.on_load(picker_dollies_init)
 end

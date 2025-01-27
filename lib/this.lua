@@ -9,6 +9,7 @@
 This = {
     other_mods = {
         ['even-pickier-dollies'] = 'picker_dollies',
+        compaktcircuit = 'compaktcircuit',
     },
 }
 

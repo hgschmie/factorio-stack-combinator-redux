@@ -38,6 +38,8 @@ function Constants.framework_init()
         name = Constants.name,
         -- The filesystem root.
         root = Constants.root,
+        -- Remote interface name
+        remote_name = Constants.stack_combinator_name,
     }
 end
 

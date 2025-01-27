@@ -483,11 +483,8 @@ local values_on_off = table.invert(on_off_values)
 
 ---@param gui_element LuaGuiElement?
 ---@param entity_data stack_combinator.Data?
----@return table<defines.wire_connector_id, boolean>
 local function render_network_signals(gui_element, entity_data)
-    local networks = {}
-
-    if not entity_data then return networks end
+    if not entity_data then return end
 
     assert(gui_element)
     gui_element.clear()
@@ -495,7 +492,6 @@ local function render_network_signals(gui_element, entity_data)
     for _, connector_id in pairs { defines.wire_connector_id.circuit_red, defines.wire_connector_id.circuit_green } do
         local signals = entity_data.main.get_signals(connector_id)
         if signals then
-            networks[connector_id] = true
             local signal_count = 0
             for _, signal in ipairs(signals) do
                 local button = gui_element.add {
@@ -526,8 +522,6 @@ local function render_network_signals(gui_element, entity_data)
             end
         end
     end
-
-    return networks
 end
 
 ---@param gui_element LuaGuiElement?
@@ -573,9 +567,9 @@ local function render_output_signals(gui_element, entity_data)
 end
 
 ---@param gui framework.gui
----@param network_state table<defines.wire_connector_id, boolean> Network state, as returned by refresh_gui
+---@param connection_state table<defines.wire_connector_id, boolean> Network state, as returned by refresh_gui
 ---@param entity_data stack_combinator.Data
-local function update_gui(gui, network_state, entity_data)
+local function update_gui(gui, connection_state, entity_data)
     local config = entity_data.config
 
     local operation_mode = gui:find_element('operation-mode')
@@ -591,7 +585,7 @@ local function update_gui(gui, network_state, entity_data)
         local network_settings = config.network_settings[connection_id]
         local checkbox = gui:find_element('enable-signals-' .. connection_id)
 
-        local network_enabled = network_state[connection_id] or false
+        local network_enabled = connection_state[connection_id] or false
         checkbox.state = network_settings.enable
         checkbox.enabled = network_enabled and not config.merge_inputs
         checkbox.tooltip = {
@@ -622,13 +616,9 @@ local function update_gui(gui, network_state, entity_data)
     end
 end
 
----@class stack_combinator.State
----@field network_state table<defines.wire_connector_id, boolean>
----@field connection_state table<string, boolean>
-
 ---@param gui framework.gui
 ---@param entity_data stack_combinator.Data
----@return stack_combinator.State
+---@return table<defines.wire_connector_id, boolean> connection_state
 local function refresh_gui(gui, entity_data)
     local entity_status = entity_data.main.status or defines.entity_status.working
 
@@ -640,16 +630,13 @@ local function refresh_gui(gui, entity_data)
 
     -- render input signals
     local input_signals = gui:find_element('input-signal-view')
-    local network_state = render_network_signals(input_signals, entity_data)
+    render_network_signals(input_signals, entity_data)
 
     -- render output signals
     local output_signals = gui:find_element('output-signal-view')
     render_output_signals(output_signals, entity_data)
 
-    local state = {
-        network_state = network_state,
-        connection_state = {},
-    }
+    local  connection_state = {}
 
     -- render network ids for Input/Output network header
     for _, pin in pairs { 'input', 'output' } do
@@ -658,7 +645,8 @@ local function refresh_gui(gui, entity_data)
         for _, color in pairs { 'red', 'green' } do
             local pin_name = ('combinator_%s_%s'):format(pin, color)
 
-            local wire_connector = entity_data.main.get_wire_connector(defines.wire_connector_id[pin_name], false)
+            local connector_id = defines.wire_connector_id[pin_name]
+            local wire_connector = entity_data.main.get_wire_connector(connector_id, false)
             local connect = false
 
             local wire_connection = gui:find_element(pin_name)
@@ -671,7 +659,7 @@ local function refresh_gui(gui, entity_data)
                 end
             end
 
-            state.connection_state[pin_name] = connect
+            connection_state[connector_id] = connect
             wire_connection.visible = connect
             if connect then
                 connections.caption = { 'gui-control-behavior.connected-to-network' }
@@ -679,18 +667,8 @@ local function refresh_gui(gui, entity_data)
             end
         end
     end
-
-    local context = gui.context
-
-    if not (context.state and table.compare(context.state, state)) then
-        update_gui(gui, network_state, entity_data)
-        context.last_config = tools.copy(entity_data.config)
-    end
-
-    return state
+    return connection_state
 end
-
-
 
 ----------------------------------------------------------------------------------------------------
 -- UI Callbacks
@@ -815,7 +793,7 @@ function Gui.onGuiOpened(event)
 
     ---@class stack_combinator.GuiContext
     ---@field last_config stack_combinator.Config?
-    ---@field last_connection_state table<string, boolean>?
+    ---@field last_connection_state table<defines.wire_connector_id, boolean>?
     local gui_state = {
         last_config = nil,
         last_connection_state = nil,
@@ -854,13 +832,13 @@ function Gui.guiUpdater(gui)
     local context = gui.context
 
     -- always update wire state and preview
-    local state = refresh_gui(gui, entity_data)
+    local connection_state = refresh_gui(gui, entity_data)
 
     local refresh_config = not (context.last_config and table.compare(context.last_config, entity_data.config))
-    local refresh_state = not (context.last_connection_state and table.compare(context.last_connection_state, state.connection_state))
+    local refresh_state = not (context.last_connection_state and table.compare(context.last_connection_state, connection_state))
 
     if refresh_config or refresh_state then
-        update_gui(gui, state.network_state, entity_data)
+        update_gui(gui, connection_state, entity_data)
     end
 
     if refresh_config then
@@ -868,7 +846,7 @@ function Gui.guiUpdater(gui)
     end
 
     if refresh_state then
-        context.last_connection_state = state.connection_state
+        context.last_connection_state = connection_state
     end
 
     return true
