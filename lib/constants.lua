@@ -5,6 +5,8 @@
 -- can be loaded into scripts and data
 ------------------------------------------------------------------------
 
+local table = require('stdlib.utils.table')
+
 ------------------------------------------------------------------------
 -- globals
 ------------------------------------------------------------------------
@@ -17,7 +19,8 @@ local Constants = {
     prefix = 'hps__sc-',
     name = 'stack-combinator-redux',
     root = '__stack-combinator-redux__',
-    order = 'c[combinators]-r[stack-combinator-redux]',
+    order = 'c[combinators]-cs[stack-combinator-redux]',
+    config_tag_name = 'sc_config',
 }
 
 Constants.gfx_location = Constants.root .. '/graphics/'
@@ -75,6 +78,13 @@ Constants.stack_combinator_name_packed = Constants:with_prefix(Constants.name ..
 Constants.main_entity_names = {
     Constants.stack_combinator_name, Constants.stack_combinator_name_packed,
 }
+
+Constants.internal_entity_names = {
+    Constants.stack_combinator_output_name,
+}
+
+Constants.main_entity_names_map = table.array_to_dictionary(Constants.main_entity_names, true)
+Constants.internal_entity_names_map = table.array_to_dictionary(Constants.internal_entity_names, true)
 
 ------------------------------------------------------------------------
 -- constants and names

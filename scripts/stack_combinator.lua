@@ -164,23 +164,37 @@ local function create_output(main)
 end
 
 ------------------------------------------------------------------------
+-- blueprinting
+------------------------------------------------------------------------
+
+---@param entity LuaEntity
+---@param idx integer
+---@param blueprint LuaItemStack
+---@param context table<string, any>
+function StaCo:blueprint_callback(entity, idx, blueprint, context)
+    local entity_data = self:getEntity(entity.unit_number)
+    if not entity_data then return end
+
+    blueprint.set_blueprint_entity_tag(idx, const.config_tag_name, entity_data.config)
+end
+
+------------------------------------------------------------------------
 -- create / delete
 ------------------------------------------------------------------------
 
 --- Creates a new entity from the main entity, registers with the mod
 --- and configures it.
 ---@param main LuaEntity
----@param player_index integer
----@param tags Tags?
+---@param player_index integer?
+---@param config stack_combinator.Config?
 ---@return stack_combinator.Data?
-function StaCo:create(main, player_index, tags)
+function StaCo:create(main, player_index, config)
     if not Is.Valid(main) then return nil end
 
     local entity_id = main.unit_number --[[@as integer]]
 
-    -- if tags were passed in and they contain a config, use that.
-    local config = self:createConfig(tags and tags['sc_config'] --[[@as stack_combinator.Config]], player_index)
-    config.status = main.status
+    -- if a config was passed in (probably from a tag), use that.
+    local config = self:createConfig(config, player_index)
 
     ---@type stack_combinator.Data
     local entity_data = {
@@ -210,6 +224,19 @@ function StaCo:destroy(entity_id)
 
     if Is.Valid(entity_data.output) then entity_data.output.destroy() end
     entity_data.output = nil
+end
+
+------------------------------------------------------------------------
+-- move
+------------------------------------------------------------------------
+
+---@param main LuaEntity
+---@param start_pos MapPosition
+function StaCo:move(main, start_pos)
+    local entity_data = self:getEntity(main.unit_number)
+    if not entity_data then return end
+
+    entity_data.output.teleport(main.position)
 end
 
 ------------------------------------------------------------------------
@@ -372,11 +399,18 @@ end
 ------------------------------------------------------------------------
 
 ---@param entity_data stack_combinator.Data
-function StaCo:reconfigure(entity_data)
+---@param new_config stack_combinator.Config?
+function StaCo:reconfigure(entity_data, new_config)
     entity_data.tick = game.tick
 
     if not entity_data.main.valid then return end
+
+    if new_config then
+        entity_data.config = util.copy(new_config)
+    end
+
     local config = entity_data.config
+    config.status = entity_data.main.status
 
     ---@type table<string, LogisticFilter>
     local filters = {}
@@ -422,15 +456,13 @@ end
 ---@param entity_data stack_combinator.Data
 ---@return boolean
 function StaCo:tick(entity_data)
-    if not entity_data.main.valid then
-        entity_data.config.status = defines.entity_status.marked_for_deconstruction
-        return false
-    else
-        entity_data.config.status = entity_data.main.status
+    if entity_data.main.valid then
         self:reconfigure(entity_data)
+        return true
     end
 
-    return true
+    entity_data.config.status = defines.entity_status.marked_for_deconstruction
+    return false
 end
 
 return StaCo

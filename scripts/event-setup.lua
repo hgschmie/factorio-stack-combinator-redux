@@ -6,6 +6,7 @@ assert(script)
 
 local Event = require('stdlib.event.event')
 local Player = require('stdlib.event.player')
+local Position = require('stdlib.area.position')
 
 local tools = require('framework.tools')
 
@@ -31,7 +32,9 @@ local function onEntityCreated(event)
     -- register entity for destruction
     script.register_on_object_destroyed(entity)
 
-    This.StackCombinator:create(entity, player_index, tags)
+    local config = tags and tags[const.config_tag_name] --[[@as stack_combinator.Config]]
+
+    This.StackCombinator:create(entity, player_index, config)
 end
 
 ---@param event EventData.on_player_mined_entity | EventData.on_robot_mined_entity | EventData.on_space_platform_mined_entity | EventData.on_entity_died | EventData.script_raised_destroy
@@ -41,6 +44,80 @@ local function onEntityDeleted(event)
     local unit_number = entity.unit_number
 
     This.StackCombinator:destroy(unit_number)
+end
+
+--------------------------------------------------------------------------------
+-- Entity destruction
+--------------------------------------------------------------------------------
+
+---@param event EventData.on_object_destroyed
+local function onObjectDestroyed(event)
+    -- clear out references if applicable
+    if not This.StackCombinator:getEntity(event.useful_id) then return end
+
+    This.StackCombinator:destroy(event.useful_id)
+end
+
+--------------------------------------------------------------------------------
+-- Blueprinting
+--------------------------------------------------------------------------------
+
+---@param entity LuaEntity
+---@param idx integer
+---@param blueprint LuaItemStack
+---@param context table<string, any>
+local function onBlueprintCallback(entity, idx, blueprint, context)
+    if not entity and entity.valid then return end
+
+    This.StackCombinator:blueprint_callback(entity, idx, blueprint, context)
+end
+
+--------------------------------------------------------------------------------
+-- Entity settings pasting
+--------------------------------------------------------------------------------
+
+---@param event EventData.on_entity_settings_pasted
+local function onEntitySettingsPasted(event)
+    local player = Player.get(event.player_index)
+
+    if not (player and player.valid and player.force == event.source.force and player.force == event.destination.force) then return end
+
+    local src_entity = This.StackCombinator:getEntity(event.source.unit_number)
+    local dst_entity = This.StackCombinator:getEntity(event.destination.unit_number)
+
+    if not (src_entity and dst_entity) then return end
+
+    This.StackCombinator:reconfigure(dst_entity, src_entity.config)
+end
+
+--------------------------------------------------------------------------------
+-- Entity cloning
+--------------------------------------------------------------------------------
+
+---@param event EventData.on_entity_cloned
+local function onEntityCloned(event)
+    if not (event.source and event.source.valid and event.destination and event.destination.valid) then return end
+
+    local src_data = This.StackCombinator:getEntity(event.source.unit_number)
+    if not src_data then return end
+
+    local cloned_entities = event.destination.surface.find_entities(Position(event.destination.position):expand_to_area(0.5))
+    for _, cloned_entity in pairs(cloned_entities) do
+        if const.internal_entity_names_map[cloned_entity.name] then
+            cloned_entity.destroy()
+        end
+    end
+
+    This.StackCombinator:create(event.destination, nil, src_data.config)
+end
+
+---@param event EventData.on_entity_cloned
+local function onInternalEntityCloned(event)
+    if not (event.source and event.source.valid and event.destination and event.destination.valid) then return end
+
+    -- delete the destination entity, it is not needed as the internal structure of the
+    -- Stack combinator is recreated when the main entity is cloned
+    event.destination.destroy()
 end
 
 --------------------------------------------------------------------------------
@@ -111,6 +188,7 @@ end
 --------------------------------------------------------------------------------
 
 local entity_filter = tools.create_event_entity_matcher('name', const.main_entity_names)
+local internal_entity_filter = tools.create_event_entity_matcher('name', const.internal_entity_names)
 
 local function register_events()
     -- entity create / delete
@@ -120,6 +198,19 @@ local function register_events()
     -- Configuration changes (runtime and startup)
     Event.on_configuration_changed(onConfigurationChanged)
     Event.register(defines.events.on_runtime_mod_setting_changed, onConfigurationChanged)
+
+    -- entity destroy (can't filter on that)
+    Event.register(defines.events.on_object_destroyed, onObjectDestroyed)
+
+    -- manage blueprinting and copy/paste
+    Framework.blueprint:register_callback(const.main_entity_names, onBlueprintCallback)
+
+    -- Entity cloning
+    Event.register(defines.events.on_entity_cloned, onEntityCloned, entity_filter)
+    Event.register(defines.events.on_entity_cloned, onInternalEntityCloned, internal_entity_filter)
+
+    -- Entity settings pasting
+    Event.register(defines.events.on_entity_settings_pasted, onEntitySettingsPasted, entity_filter)
 
     -- Ticker
     Event.register(defines.events.on_tick, onTick)
