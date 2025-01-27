@@ -145,6 +145,15 @@ function CompaktCircuitSupport.data()
     data:extend { packed }
 end
 
+function CompaktCircuitSupport.data_final_fixes()
+    if not Framework.settings:startup_setting('migrate_stacos') then return end
+
+    if not data.raw['arithmetic-combinator'][const.migration.packed_name] then
+        local migration = tools.copy(data.raw['arithmetic-combinator'][const.stack_combinator_name_packed])
+        migration.name = const.migration.packed_name
+        data:extend { migration }
+    end
+end
 
 function CompaktCircuitSupport.runtime()
     local Event = require('stdlib.event.event')

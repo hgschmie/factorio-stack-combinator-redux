@@ -115,6 +115,7 @@ Constants.settings_keys = {
     'empty_unpowered',
     'non_item_signals',
     'update_interval',
+    'migrate_stacos',
 }
 
 Constants.settings_names = {}
@@ -124,6 +125,33 @@ for _, key in pairs(Constants.settings_keys) do
     Constants.settings_names[key] = key
     Constants.settings[key] = Constants:with_prefix(key)
 end
+
+------------------------------------------------------------------------
+-- migration
+------------------------------------------------------------------------
+
+Constants.migration = {
+    name = 'stack-combinator',
+    packed_name = 'stack-combinator-packed',
+    output_name = 'stack-combinator-output',
+    output_packed_name = 'stack-combinator-output-packed',
+}
+
+Constants.migration.migrations = {
+    ['stack-combinator'] = Constants.stack_combinator_name,
+    ['stack-combinator-packed'] = Constants.stack_combinator_name_packed,
+}
+
+Constants.migration.known_entities = {
+    Constants.migration.name,
+    Constants.migration.packed_name,
+    Constants.migration.output_name,
+    Constants.migration.output_packed_name,
+}
+
+Constants.migration.migrations_names = table.keys(Constants.migration.migrations)
+Constants.migration.known_entities_map = table.array_to_dictionary(Constants.migration.known_entities, true)
+
 
 ------------------------------------------------------------------------
 return Constants

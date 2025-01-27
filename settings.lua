@@ -47,9 +47,20 @@ local runtime_settings = {
     },
 }
 
+local startup_settings = {
+    {
+        type = 'bool-setting',
+        name = const.settings.migrate_stacos,
+        order = 'aa',
+        setting_type = 'startup',
+        default_value = false,
+    },
+}
+
 data:extend(framework_settings)
 data:extend(player_settings)
 data:extend(runtime_settings)
+data:extend(startup_settings)
 
 --------------------------------------------------------------------------------
 

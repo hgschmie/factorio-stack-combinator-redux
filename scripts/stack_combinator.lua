@@ -8,6 +8,8 @@ local util = require('util')
 
 local Is = require('stdlib.utils.is')
 
+local signal_converter = require('framework.signal_converter')
+
 local const = require('lib.constants')
 
 ---@class stack_combinator.StaCo
@@ -118,8 +120,7 @@ function StaCo:createConfig(parent_config, player_index)
     local default_config = {
         op = const.defines.operations.multiply,
         empty_unpowered = player_index and Framework.settings:player_setting(const.settings_names.empty_unpowered, player_index) or false,
-        non_item_signals = player_index and tonumber(Framework.settings:player_setting(const.settings_names.non_item_signals, player_index)) or
-            const.defines.non_item_signal_type.drop,
+        non_item_signals = player_index and tonumber(Framework.settings:player_setting(const.settings_names.non_item_signals, player_index)) or const.defines.non_item_signal_type.drop,
         merge_inputs = false,
         use_wagon_stacks = false,
         process_fluids = false,
@@ -134,6 +135,8 @@ function StaCo:createConfig(parent_config, player_index)
             },
         }
     }
+
+    if not parent_config then return default_config end
 
     return util.merge { default_config, parent_config }
 end
@@ -282,22 +285,6 @@ local function create_key(signal)
     return key
 end
 
----@param signal Signal
----@return LogisticFilter
-local function signal_to_logistic_filter(signal)
-    ---@type LogisticFilter
-    local filter = {
-        value = {
-            type = signal.signal.type or 'item',
-            name = signal.signal.name,
-            quality = signal.signal.quality or 'normal',
-        },
-        min = signal.count,
-    }
-
-    return filter
-end
-
 ---@class stack_combinator.WagonStack
 ---@field cargo number
 ---@field fluid number
@@ -346,7 +333,7 @@ function StaCo:compute(signals, filters, config, connection_id)
     local invert = connection_id and config.network_settings[connection_id].invert or false
 
     for _, signal in pairs(signals) do
-        local filter = signal_to_logistic_filter(signal)
+        local filter = signal_converter:signal_to_logistic_filter(signal)
         local name = filter.value.name
         local value = filter.min
         local type = filter.value.type

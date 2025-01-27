@@ -10,6 +10,8 @@ local Position = require('stdlib.area.position')
 
 local tools = require('framework.tools')
 
+local migration = require('scripts.migration')
+
 local const = require('lib.constants')
 
 --------------------------------------------------------------------------------
@@ -136,6 +138,11 @@ local function onConfigurationChanged()
 
     for _, entity_data in pairs(This.StackCombinator:entities()) do
         entity_data.config = This.StackCombinator:createConfig(entity_data.config)
+    end
+
+    if Framework.settings:startup_setting('migrate_stacos') then
+        migration:migrateStacos()
+        migration:migrateBlueprints()
     end
 end
 
