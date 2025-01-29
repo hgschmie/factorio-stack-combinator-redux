@@ -20,12 +20,15 @@ local StaCo = {
             return value * stack
         end,
         [const.defines.operations.divide_ceil] = function(self, value, stack)
+            if stack == 0 then return 0 end
             return value >= 0 and math.ceil(value / stack) or math.floor(value / stack)
         end,
         [const.defines.operations.divide_floor] = function(self, value, stack)
+            if stack == 0 then return 0 end
             return value >= 0 and math.floor(value / stack) or math.ceil(value / stack)
         end,
         [const.defines.operations.round] = function(self, value, stack)
+            if stack == 0 then return 0 end
             return (math.abs(value) % stack > math.ceil(stack / 2))
                 and self.compute_ops[const.defines.operations.ceil](self, value, stack)
                 or self.compute_ops[const.defines.operations.floor](self, value, stack)
@@ -257,14 +260,16 @@ local function set_filters(entity_data, filters)
     local section_filters = {}
 
     for _, filter in pairs(filters) do
-        -- clamp to 32 bit values ?
-        filter.min = (filter.min > MAX) and MAX or filter.min
-        filter.min = (filter.min < MIN) and MIN or filter.min
+        if filter.min ~= 0 then
+            -- clamp to 32 bit values
+            filter.min = (filter.min > MAX) and MAX or filter.min
+            filter.min = (filter.min < MIN) and MIN or filter.min
 
-        table.insert(section_filters, filter)
+            table.insert(section_filters, filter)
 
-        max_count = max_count - 1
-        if max_count == 0 then break end
+            max_count = max_count - 1
+            if max_count == 0 then break end
+        end
     end
 
     local output = entity_data.output.get_control_behavior() --[[@as LuaConstantCombinatorControlBehavior ]]
@@ -293,32 +298,36 @@ local empty_wagon_stack = {
     fluid = 1,
 }
 
+---@type table<string, fun(prototype: LuaEntityPrototype, wagon_stacks: stack_combinator.WagonStack, count: number)>
+local wagon_type = {
+    ['cargo-wagon'] = function(prototype, wagon_stacks, count)
+            local cargo_stack = prototype.get_inventory_size(defines.inventory.cargo_wagon)
+            wagon_stacks.cargo = wagon_stacks.cargo + (cargo_stack and (cargo_stack * count) or 0)
+    end,
+    ['fluid-wagon'] = function (prototype, wagon_stacks, count)
+        local fluid_stack = prototype.fluid_capacity
+        wagon_stacks.fluid = wagon_stacks.fluid + (fluid_stack and (fluid_stack * count) or 0)
+    end
+}
+
 ---@param signals Signal[]
 ---@return stack_combinator.WagonStack
 local function compute_wagon_stacks(signals)
-    local cargo = 0
-    local fluid = 0
+
+    ---@type stack_combinator.WagonStack
+    local wagon_stack = {
+        cargo = 0,
+        fluid = 0,
+    }
+
     for _, signal in pairs(signals) do
         local prototype = prototypes.entity[signal.signal.name]
-        if Is.Valid(prototype) then
-            local cargo_stacks = (prototype.type == 'cargo-wagon') and prototype.get_inventory_size(defines.inventory.cargo_wagon)
-            if (cargo_stacks) then
-                cargo_stacks = cargo_stacks * signal.count
-                cargo = cargo + cargo_stacks
-            end
-
-            local fluid_stack = prototype.type == 'fluid-wagon' and prototype.fluid_capacity
-            if (fluid_stack) then
-                fluid_stack = fluid_stack * signal.count
-                fluid = fluid + fluid_stack
-            end
+        if Is.Valid(prototype) and wagon_type[prototype.type] then
+            wagon_type[prototype.type](prototype, wagon_stack, signal.count)
         end
     end
 
-    return {
-        cargo = cargo > 0 and cargo or 1,
-        fluid = fluid > 0 and fluid or 1,
-    }
+    return wagon_stack
 end
 
 --- Convert circuit network signal values to their stack sizes
@@ -341,29 +350,29 @@ function StaCo:compute(signals, filters, config, connection_id)
         assert(name)
         assert(value)
 
-        -- always process items or when non-item signals are not dropped
-        local process = (type == 'item') or (config.non_item_signals ~= const.defines.non_item_signal_type.drop)
+        local is_item = (type == 'item')
+        local is_fluid = config.use_wagon_stacks and config.process_fluids and (type == 'fluid')
+        local is_not_drop = (config.non_item_signals ~= const.defines.non_item_signal_type.drop)
 
-        -- if wagon_stacks is active, skip cargo-wagon and fluid-wagon
+        -- always process items or when non-item signals are not dropped
+        local process = is_item or is_fluid or is_not_drop
+
+        -- if wagon_stacks is active, skip known wagon types
         if config.use_wagon_stacks and prototypes.entity[name] then
             local entity_type = prototypes.entity[name].type
-            process = process and not (entity_type == 'cargo-wagon' or entity_type == 'fluid-wagon')
+            process = process and not wagon_type[entity_type]
         end
 
         if (process) then
-            local match_item = type == 'item'
-            local match_fluid = config.use_wagon_stacks and config.process_fluids and type == 'fluid'
-
             local prototype = prototypes.item[name]
-            local multiplier
-            if match_item or match_fluid then
-                multiplier = invert and -1 or 1
-            else
-                multiplier = (config.non_item_signals == const.defines.non_item_signal_type.invert) and -1 or 1
+            local multiplier = invert and -1 or 1
+
+            if not (is_item or is_fluid) then
+                multiplier = multiplier * ((config.non_item_signals == const.defines.non_item_signal_type.invert) and -1 or 1)
             end
 
-            local stack = match_item and (prototype.stack_size * (config.use_wagon_stacks and wagon_stacks.cargo or 1)) or 1
-            stack = match_fluid and wagon_stacks.fluid or stack
+            local stack = is_item and (prototype.stack_size * (config.use_wagon_stacks and wagon_stacks.cargo or 1)) or 1
+            stack = is_fluid and wagon_stacks.fluid or stack
 
             local result = multiplier * This.StackCombinator.compute_ops[config.op](self, value, stack)
 

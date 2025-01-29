@@ -140,7 +140,7 @@ local function onConfigurationChanged()
         entity_data.config = This.StackCombinator:createConfig(entity_data.config)
     end
 
-    if Framework.settings:startup_setting('migrate_stacos') then
+    if Framework.settings:startup_setting(const.settings_names.migrate_stacos) then
         migration:migrateStacos()
         migration:migrateBlueprints()
     end
@@ -157,9 +157,7 @@ local function onTick(event)
     local process_count = math.ceil(table_size(entities) / interval)
     local index = storage.last_tick_entity
 
-    if table_size(entities) == 0 then
-        index = nil
-    else
+    if process_count > 0 then
         local destroy_list = {}
         local entity_data
         repeat
@@ -180,11 +178,11 @@ local function onTick(event)
                 This.StackCombinator:destroy(unit_id)
 
                 -- if the last index was destroyed, reset the scan loop index
-                if unit_id == index then
-                    index = nil
-                end
+                if unit_id == index then index = nil end
             end
         end
+    else
+        index = nil
     end
 
     storage.last_tick_entity = index
@@ -204,7 +202,6 @@ local function register_events()
 
     -- Configuration changes (runtime and startup)
     Event.on_configuration_changed(onConfigurationChanged)
-    Event.register(defines.events.on_runtime_mod_setting_changed, onConfigurationChanged)
 
     -- entity destroy (can't filter on that)
     Event.register(defines.events.on_object_destroyed, onObjectDestroyed)
