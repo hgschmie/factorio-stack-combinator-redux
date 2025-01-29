@@ -110,9 +110,10 @@ When activating the "Migrate 1.1 Stack combinators" setting, all existing, old s
 
 (C) 2025 Henning Schmiedehausen (hgschmie)
 
-Report Bugs either on the [Mod discussion forum](https://mods.fa)
+Report Bugs either directly [on github](https://github.com/hgschmie/factorio-stack-combinator-redux/issues) (preferred!) or on the [Mod discussion forum](https://mods.factorio.com/mod/stack-combinator-redux/discussion).
 
+I occasionally hang out [on the official Factorio discord](https://discord.gg/factorio). Find me on `#mod-dev-help` or `#mod-dev-discussion`.
 
-Licensed under the MIT License. See the [license file](LICENSE.md) for details
+Licensed under the MIT License. See the [license file](LICENSE.md) for details.
 
-* Inspired by [the Stack Combinator by @modo_lv](https://mods.factorio.com/mod/stack-combinator)
+* Inspired by the [Stack Combinator](https://mods.factorio.com/mod/stack-combinator) mod by [@modo_lv](https://mods.factorio.com/user/modo_lv).
