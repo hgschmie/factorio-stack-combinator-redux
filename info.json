@@ -13,7 +13,19 @@
   "package": {
     "git_publish_branch": "main",
     "readme": "README.md",
-    "gallery": [ ".portal/screenshot-1.png", ".portal/screenshot-2.png", ".portal/screenshot-3.png" ],
-    "sync_portal_details": true
+    "gallery": [
+      ".portal/staco-main.png",
+      ".portal/staco-ui.png"
+    ],
+    "sync_portal_details": true,
+    "ignore": [
+      "portal/*",
+      "**/*.xcf",
+      "**/.zip",
+      ".git",
+      ".gitignore",
+      ".vscode",
+      ".DS_Store"
+    ]
   }
 }

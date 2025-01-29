@@ -44,15 +44,15 @@ The 'Mode' setting supports the following options:
 
 The _Merge red and green input signals_ checkbox controls whether input signals are added first or whether they are processed separately and the results are added.
 
+The red and green wires each have a "coal 25" signal. When using the _Divide and round up_ operation, the combinator will output "coal 2" as each signal is calculated separately and rounded up to a full stack:
+
 ![Stack combinator UI](https://github.com/hgschmie/factorio-stack-combinator-redux/raw/main/portal/staco-merge-off.png)
 
-The red and green wires each have a "coal 25" signal. When using the _Divide and round up_ operation, the combinator will output "coal 2" as each signal is calculated separately and rounded up to a full stack.
+The red and green wires each have a "coal 25" signal but the _Merge red and green input signals_ checkbox is activated. When using the _Divide and round up_ operation, the combinator will output "coal 1" as the red and green signals are first added to 50 which is a single stack:
 
 ![Stack combinator UI](https://github.com/hgschmie/factorio-stack-combinator-redux/raw/main/portal/staco-merge-on.png)
 
-The red and green wires each have a "coal 25" signal but the _Merge red and green input signals_ checkbox is activated. When using the _Divide and round up_ operation, the combinator will output "coal 1" as the red and green signals are first added to 50 which is a single stack.
-
-The _R_ and _G_ checkboxes control whether the combinator processes the red/green signals. This is similar to the standard combinators. If the box is unchecked, signals are not processed even if they are present. If no wire is connected or the merge box is checked, the checkboxes are grayed out.
+The _R_ and _G_ checkboxes control whether the combinator processes the red/green signals. This is similar to the standard combinators. If a box is unchecked, signals are not processed even if they are present. If no wire is connected or the merge box is checked, the checkboxes are grayed out.
 
 The _Invert signals_ checkboxes control the inversion of the red and green signals. These boxes are even available when merge is selected. They will be grayed out if no wire is connected. Signal inversion affects all signals, not just item signals.
 
@@ -109,6 +109,9 @@ When activating the "Migrate 1.1 Stack combinators" setting, all existing, old s
 ## Legal and other stuff
 
 (C) 2025 Henning Schmiedehausen (hgschmie)
+
+Report Bugs either on the [Mod discussion forum](https://mods.fa)
+
 
 Licensed under the MIT License. See the [license file](LICENSE.md) for details
 
