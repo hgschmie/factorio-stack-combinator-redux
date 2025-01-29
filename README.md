@@ -2,7 +2,7 @@
 
 A Factorio 2.0 combinator for the circuit network that manages item stack sizes and related computation.
 
-![A stack combinator in the wild](https://github.com/hgschmie/factorio-stack-combinator-redux/raw/master/portal/staco-main.png)
+[![A stack combinator in the wild](https://github.com/hgschmie/factorio-stack-combinator-redux/raw/main/portal/staco-main.png)]
 
 This mod is a re-implementation of the [Stack Combinator](https://mods.factorio.com/mod/stack-combinator) mod from @modo_lv. It retains its functionality but is a new implementation for Factorio 2.0.
 
@@ -25,7 +25,7 @@ Migration of 1.1 stack combinators in existing saves is supported.
 
 ## Stack Combinator UI settings
 
-![Stack combinator UI](https://github.com/hgschmie/factorio-stack-combinator-redux/raw/master/portal/staco-ui.png)
+[![Stack combinator UI](https://github.com/hgschmie/factorio-stack-combinator-redux/raw/main/portal/staco-ui.png)]
 
 The stack combinator supports settings copy/paste and blueprinting.
 
@@ -58,7 +58,7 @@ When activating the "Wagon Stacks" switch, the stack size of each item is multip
 
 When checking the 'Process fluid signals' checkbox, the combinator will also compute fluid capacity for fluid wagons.
 
-![Stack combinator UI](https://github.com/hgschmie/factorio-stack-combinator-redux/raw/master/portal/staco-wagon-stacks.png)
+[![Stack combinator UI](https://github.com/hgschmie/factorio-stack-combinator-redux/raw/main/portal/staco-wagon-stacks.png)]
 
 In this example, the combinator calculates the number of Advanced circuits that can be loaded onto a two wagon train. For this, the red wire carries the number of cargo wagons (two) and the "Advanced Circuit" signal. The mode is set to "multiply" which will multiply the number of wagons with the stack size of an item and the capacity of a cargo wagon.
 
