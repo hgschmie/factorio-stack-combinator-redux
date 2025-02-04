@@ -17,7 +17,9 @@ local function ccs_get_info(entity)
     local entity_data = This.StackCombinator:getEntity(entity.unit_number)
     if not entity_data then return end
 
-    return  entity_data.config
+    return  {
+        [const.config_tag_name] = entity_data.config
+    }
 end
 
 ---@class stack_combinator.CompactCircuitInfo : stack_combinator.Config
@@ -42,7 +44,7 @@ local function ccs_create_packed_entity(info, surface, position, force)
     assert(packed_main)
     script.register_on_object_destroyed(packed_main)
 
-    local entity_data = This.StackCombinator:create(packed_main, nil, info)
+    local entity_data = This.StackCombinator:create(packed_main, nil, info[const.config_tag_name])
     assert(entity_data)
 
     return packed_main
@@ -62,7 +64,7 @@ local function ccs_create_entity(info, surface, force)
     assert(main)
     script.register_on_object_destroyed(main)
 
-    local entity_data = This.StackCombinator:create(main, nil, info)
+    local entity_data = This.StackCombinator:create(main, nil, info[const.config_tag_name])
     assert(entity_data)
 
     return main
