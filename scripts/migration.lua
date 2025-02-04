@@ -12,7 +12,7 @@ local table = require('stdlib.utils.table')
 
 local const = require('lib.constants')
 
-if not Framework.settings:startup_setting('migrate_stacos') then return nil end
+if not Framework.settings:startup_setting(const.settings_names.migrate_stacos) then return nil end
 
 ---@class stack_combinator.Migration
 ---@field stats table<string, number>

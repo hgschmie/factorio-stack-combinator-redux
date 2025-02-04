@@ -39,10 +39,9 @@ local function onEntityCreated(event)
     This.StackCombinator:create(entity, player_index, config)
 end
 
----@param event EventData.on_player_mined_entity | EventData.on_robot_mined_entity | EventData.on_space_platform_mined_entity | EventData.on_entity_died | EventData.script_raised_destroy
+---@param event EventData.on_player_mined_entity | EventData.on_robot_mined_entity | EventData.on_space_platform_mined_entity | EventData.script_raised_destroy
 local function onEntityDeleted(event)
     local entity = event and event.entity
-
     local unit_number = entity.unit_number
 
     This.StackCombinator:destroy(unit_number)
@@ -141,6 +140,7 @@ local function onConfigurationChanged()
     end
 
     if Framework.settings:startup_setting(const.settings_names.migrate_stacos) then
+        assert(migration)
         migration:migrateStacos()
         migration:migrateBlueprints()
     end
@@ -173,7 +173,7 @@ local function onTick(event)
             end
         until process_count == 0 or not index
 
-        if table_size(destroy_list) then
+        if table_size(destroy_list) > 0 then
             for _, unit_id in pairs(destroy_list) do
                 This.StackCombinator:destroy(unit_id)
 

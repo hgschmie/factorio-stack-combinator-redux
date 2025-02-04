@@ -200,7 +200,7 @@ function StaCo:create(main, player_index, config)
     local entity_id = main.unit_number --[[@as integer]]
 
     -- if a config was passed in (probably from a tag), use that.
-    local config = self:createConfig(config, player_index)
+    config = self:createConfig(config, player_index)
 
     ---@type stack_combinator.Data
     local entity_data = {

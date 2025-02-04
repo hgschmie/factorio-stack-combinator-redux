@@ -9,10 +9,10 @@ local Player = require('stdlib.event.player')
 local table = require('stdlib.utils.table')
 
 local tools = require('framework.tools')
+
 local signal_converter = require('framework.signal_converter')
 
 local const = require('lib.constants')
-
 
 ---@class stack_combinator.Gui
 ---@field NAME string
