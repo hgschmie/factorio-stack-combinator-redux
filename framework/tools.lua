@@ -52,4 +52,43 @@ for status, led in pairs(Tools.STATUS_TABLE) do
     Tools.STATUS_SPRITES[status] = Tools.STATUS_LEDS[led]
 end
 
+--------------------------------------------------------------------------------
+-- consistent entity key generation
+--------------------------------------------------------------------------------
+
+---@alias framework.tools.EntityKey string
+
+---@param entity LuaEntity?
+---@return string?
+function Tools:getName(entity)
+    if not (entity and entity.valid) then return nil end
+    return entity.type == 'entity-ghost' and entity.ghost_name or entity.name
+end
+
+---@param position MapPosition
+---@param surface_index number?
+---@param name string?
+---@return framework.tools.EntityKey
+function Tools:createEntityKey(position, surface_index, name)
+    surface_index = surface_index or 0
+    if name then return ('%2.2f:%2.2f:%d:%s'):format(position.x, position.y, surface_index, name) end
+
+    return ('%2.2f:%2.2f:%d'):format(position.x, position.y, surface_index)
+end
+
+---@param blueprint_entity BlueprintEntity
+---@param surface_index number?
+---@return framework.tools.EntityKey
+function Tools:createEntityKeyFromBlueprintEntity(blueprint_entity, surface_index)
+    return self:createEntityKey(blueprint_entity.position, surface_index, blueprint_entity.name)
+end
+
+---@param entity LuaEntity
+---@return framework.tools.EntityKey?
+function Tools:createEntityKeyFromEntity(entity)
+    local name = self:getName(entity)
+    if not name then return nil end
+    return self:createEntityKey(entity.position, entity.surface_index, name)
+end
+
 return Tools

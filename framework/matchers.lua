@@ -60,9 +60,10 @@ local Matchers = {
 ---@param invert boolean? - Invert the matching condition. `false` if omitted.
 ---@return framework.event_matcher.MatcherFunction
 function Matchers:createMatcherFunction(values, extract_function, invert)
-    invert = invert or false
-
+    assert(values)
     if type(values) ~= 'table' then values = { values } end
+
+    invert = invert or false
 
     local value_map = table.array_to_dictionary(values, true)
 
