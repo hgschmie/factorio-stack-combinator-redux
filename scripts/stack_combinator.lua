@@ -173,15 +173,17 @@ end
 -- blueprinting
 ------------------------------------------------------------------------
 
+--- Serializes the configuration suitable for blueprinting and tombstone management.
+---
 ---@param entity LuaEntity
----@param idx integer
----@param blueprint LuaItemStack
----@param context table<string, any>
-function StaCo:blueprint_callback(entity, idx, blueprint, context)
+---@return table<string, any>?
+function StaCo:serializeConfiguration(entity)
     local entity_data = self:getEntity(entity.unit_number)
     if not entity_data then return end
 
-    blueprint.set_blueprint_entity_tag(idx, const.config_tag_name, entity_data.config)
+    return {
+        [const.config_tag_name] = entity_data.config,
+    }
 end
 
 ------------------------------------------------------------------------

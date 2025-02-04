@@ -8,6 +8,7 @@ local Event = require('stdlib.event.event')
 local Player = require('stdlib.event.player')
 local table = require('stdlib.utils.table')
 
+local Matchers = require('framework.matchers')
 local tools = require('framework.tools')
 
 local signal_converter = require('framework.signal_converter')
@@ -859,8 +860,8 @@ end
 local function init_gui()
     Framework.gui_manager:register_gui_type(Gui.NAME, get_gui_event_definition())
 
-    local entity_filter = tools.create_event_entity_matcher('name', const.main_entity_names)
-    local ghost_entity_filter = tools.create_event_ghost_entity_matcher('ghost_name', const.main_entity_names)
+    local entity_filter = Matchers:matchEventEntityName(const.main_entity_names)
+    local ghost_entity_filter = Matchers:matchEventEntityGhostName(const.main_entity_names)
 
     -- Gui updates / sync inserters
     Event.on_event(defines.events.on_gui_opened, Gui.onGuiOpened, entity_filter)

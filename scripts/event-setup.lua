@@ -8,7 +8,7 @@ local Event = require('stdlib.event.event')
 local Player = require('stdlib.event.player')
 local Position = require('stdlib.area.position')
 
-local tools = require('framework.tools')
+local Matchers = require('framework.matchers')
 
 local migration = require('scripts.migration')
 
@@ -25,8 +25,9 @@ local function onEntityCreated(event)
     local player_index = event.player_index
     local tags = event.tags
 
-    local entity_ghost = Framework.ghost_manager:findMatchingGhost(entity)
+    local entity_ghost = Framework.ghost_manager:findGhostForEntity(entity)
     if entity_ghost then
+        Framework.ghost_manager:deleteGhost(entity.unit_number)
         player_index = player_index or entity_ghost.player_index
         tags = tags or entity_ghost.tags
     end
@@ -60,17 +61,15 @@ local function onObjectDestroyed(event)
 end
 
 --------------------------------------------------------------------------------
--- Blueprinting
+-- serialization for Blueprinting and Tombstones
 --------------------------------------------------------------------------------
 
 ---@param entity LuaEntity
----@param idx integer
----@param blueprint LuaItemStack
----@param context table<string, any>
-local function onBlueprintCallback(entity, idx, blueprint, context)
+---@return table<string, any>?
+local function serialize_config(entity)
     if not entity and entity.valid then return end
 
-    This.StackCombinator:blueprint_callback(entity, idx, blueprint, context)
+    return This.StackCombinator:serializeConfiguration(entity)
 end
 
 --------------------------------------------------------------------------------
@@ -192,13 +191,15 @@ end
 -- event registration and management
 --------------------------------------------------------------------------------
 
-local entity_filter = tools.create_event_entity_matcher('name', const.main_entity_names)
-local internal_entity_filter = tools.create_event_entity_matcher('name', const.internal_entity_names)
+local entity_filter = Matchers:matchEventEntityName(const.main_entity_names)
+local internal_entity_filter = Matchers:matchEventEntityName(const.internal_entity_names)
 
 local function register_events()
     -- entity create / delete
-    tools.event_register(tools.CREATION_EVENTS, onEntityCreated, entity_filter)
-    tools.event_register(tools.DELETION_EVENTS, onEntityDeleted, entity_filter)
+    Event.register(Matchers.CREATION_EVENTS, onEntityCreated, entity_filter)
+    Event.register(Matchers.DELETION_EVENTS, onEntityDeleted, entity_filter)
+
+    Framework.ghost_manager:registerForName(const.main_entity_names)
 
     -- Configuration changes (runtime and startup)
     Event.on_configuration_changed(onConfigurationChanged)
@@ -207,7 +208,13 @@ local function register_events()
     Event.register(defines.events.on_object_destroyed, onObjectDestroyed)
 
     -- manage blueprinting and copy/paste
-    Framework.blueprint:register_callback(const.main_entity_names, onBlueprintCallback)
+    Framework.blueprint:registerCallback(const.main_entity_names, serialize_config)
+
+    -- manage tombstones for undo/redo and dead entities
+    Framework.tombstone:registerCallback(const.main_entity_names, {
+        create_tombstone = serialize_config,
+        apply_tombstone = Framework.ghost_manager.mapTombstoneToGhostTags,
+    })
 
     -- Entity cloning
     Event.register(defines.events.on_entity_cloned, onEntityCloned, entity_filter)
