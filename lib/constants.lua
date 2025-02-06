@@ -77,15 +77,10 @@ Constants.stack_combinator_output_name = Constants.stack_combinator_name .. '-o'
 -- Compactcircuits support
 Constants.stack_combinator_name_packed = Constants:with_prefix(Constants.name .. '-packed')
 
-Constants.main_entity_names = {
-    Constants.stack_combinator_name, Constants.stack_combinator_name_packed,
-}
-
 Constants.internal_entity_names = {
     Constants.stack_combinator_output_name,
 }
 
-Constants.main_entity_names_map = table.array_to_dictionary(Constants.main_entity_names, true)
 Constants.internal_entity_names_map = table.array_to_dictionary(Constants.internal_entity_names, true)
 
 ------------------------------------------------------------------------
@@ -125,6 +120,24 @@ for _, key in pairs(Constants.settings_keys) do
     Constants.settings_names[key] = key
     Constants.settings[key] = Constants:with_prefix(key)
 end
+
+------------------------------------------------------------------------
+-- data helper
+------------------------------------------------------------------------
+
+Constants.ac_sprites = {
+    'plus_symbol_sprites',
+    'minus_symbol_sprites',
+    'multiply_symbol_sprites',
+    'divide_symbol_sprites',
+    'modulo_symbol_sprites',
+    'power_symbol_sprites',
+    'left_shift_symbol_sprites',
+    'right_shift_symbol_sprites',
+    'and_symbol_sprites',
+    'or_symbol_sprites',
+    'xor_symbol_sprites',
+}
 
 ------------------------------------------------------------------------
 -- migration

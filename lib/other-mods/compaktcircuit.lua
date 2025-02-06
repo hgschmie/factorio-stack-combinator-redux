@@ -4,7 +4,6 @@
 
 local const = require('lib.constants')
 local Is = require('stdlib.utils.is')
-local tools = require('framework.tools')
 
 local CompaktCircuitSupport = {}
 
@@ -17,7 +16,7 @@ local function ccs_get_info(entity)
     local entity_data = This.StackCombinator:getEntity(entity.unit_number)
     if not entity_data then return end
 
-    return  {
+    return {
         [const.config_tag_name] = entity_data.config
     }
 end
@@ -90,69 +89,30 @@ end
 --------------------------------------------------------------------------------
 
 function CompaktCircuitSupport.data()
-    local collision_mask_util = require('collision-mask-util')
+    local data_util = require('framework.prototypes.data-util')
 
-    local packed = tools.copy(data.raw['arithmetic-combinator'][const.stack_combinator_name])
-
-    -- PrototypeBase
-    packed.name = const.stack_combinator_name_packed
+    local main_entity_packed = data_util.copy_prototype(data.raw['arithmetic-combinator'][const.stack_combinator_name],
+        const.stack_combinator_name_packed, true) --[[@as data.ArithmeticCombinatorPrototype ]]
 
     -- ArithmeticCombinatorPrototype
-    packed.plus_symbol_sprites = util.empty_sprite()
-    packed.minus_symbol_sprites = util.empty_sprite()
-    packed.multiply_symbol_sprites = util.empty_sprite()
-    packed.divide_symbol_sprites = util.empty_sprite()
-    packed.modulo_symbol_sprites = util.empty_sprite()
-    packed.power_symbol_sprites = util.empty_sprite()
-    packed.left_shift_symbol_sprites = util.empty_sprite()
-    packed.right_shift_symbol_sprites = util.empty_sprite()
-    packed.and_symbol_sprites = util.empty_sprite()
-    packed.or_symbol_sprites = util.empty_sprite()
-    packed.xor_symbol_sprites = util.empty_sprite()
+    for _, field in pairs(const.ac_sprites) do
+        main_entity_packed[field] = util.empty_sprite()
+    end
 
-    -- CombinatorPrototype
-    packed.sprites = util.empty_sprite()
-    packed.activity_led_light_offsets = { { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } }
-    packed.activity_led_sprites = util.empty_sprite()
-    packed.draw_circuit_wires = false
-
-    -- turn off the flashing icons
-    packed.energy_source.render_no_network_icon = false
-    packed.energy_source.render_no_power_icon = false
-
-    -- EntityPrototype
-    packed.collision_box = nil
-    packed.collision_mask = collision_mask_util.new_mask()
-    packed.selection_box = nil
-    packed.flags = {
-        'placeable-off-grid',
-        'not-repairable',
-        'not-on-map',
-        'not-deconstructable',
-        'not-blueprintable',
-        'hide-alt-info',
-        'not-flammable',
-        'not-upgradable',
-        'not-in-kill-statistics',
-        'not-in-made-in'
-    }
-
-    packed.allow_copy_paste = false
-    packed.hidden = true
-    packed.hidden_in_factoriopedia = true
-    packed.minable = nil
-    packed.selection_box = nil
-    packed.selectable_in_game = false
-
-    data:extend { packed }
+    data:extend { main_entity_packed }
 end
 
+--------------------------------------------------------------------------------
+
 function CompaktCircuitSupport.data_final_fixes()
-    if not Framework.settings:startup_setting('migrate_stacos') then return end
+    local data_util = require('framework.prototypes.data-util')
+
+    if not Framework.settings:startup_setting(const.settings_names.migrate_stacos) then return end
 
     if not data.raw['arithmetic-combinator'][const.migration.packed_name] then
-        local migration = tools.copy(data.raw['arithmetic-combinator'][const.stack_combinator_name_packed])
-        migration.name = const.migration.packed_name
+        local migration = data_util.copy_prototype(data.raw['arithmetic-combinator'][const.stack_combinator_name_packed],
+            const.migration.packed_name, true) --[[@as data.ArithmeticCombinatorPrototype ]]
+
         data:extend { migration }
     end
 end

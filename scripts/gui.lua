@@ -860,12 +860,12 @@ end
 local function init_gui()
     Framework.gui_manager:register_gui_type(Gui.NAME, get_gui_event_definition())
 
-    local entity_filter = Matchers:matchEventEntityName(const.main_entity_names)
-    local ghost_entity_filter = Matchers:matchEventEntityGhostName(const.main_entity_names)
+    local match_main_entity = Matchers:matchEventEntityName(const.stack_combinator_name)
+    local match_ghost_main_entity = Matchers:matchEventEntityGhostName(const.stack_combinator_name)
 
     -- Gui updates / sync inserters
-    Event.on_event(defines.events.on_gui_opened, Gui.onGuiOpened, entity_filter)
-    Event.on_event(defines.events.on_gui_opened, Gui.onGhostGuiOpened, ghost_entity_filter)
+    Event.on_event(defines.events.on_gui_opened, Gui.onGuiOpened, match_main_entity)
+    Event.on_event(defines.events.on_gui_opened, Gui.onGhostGuiOpened, match_ghost_main_entity)
 end
 
 Event.on_init(init_gui)

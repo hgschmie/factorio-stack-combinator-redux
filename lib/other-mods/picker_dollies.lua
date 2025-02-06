@@ -21,7 +21,7 @@ local PickerDolliesSupport = {}
 local function picker_dollies_moved(event)
     local moved_entity = event.moved_entity
     if not Is.Valid(moved_entity) then return end
-    if not const.main_entity_names_map[moved_entity.name] then return end
+    if event.moved_entity.name ~= const.stack_combinator_name then return end
 
     This.StackCombinator:move(moved_entity, event.start_pos)
 end

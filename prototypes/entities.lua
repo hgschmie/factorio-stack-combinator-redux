@@ -9,6 +9,8 @@ local collision_mask_util = require('collision-mask-util')
 
 local sprites = require('stdlib.data.modules.sprites')
 
+local data_util = require('framework.prototypes.data-util')
+
 local const = require('lib.constants')
 
 -- Main entity
@@ -41,10 +43,9 @@ local full_sprite = { east = sprite_v, west = sprite_v, north = sprite_h, south 
 main_entity.name = const.stack_combinator_name
 
 -- ArithmeticCombinatorPrototype
-main_entity.plus_symbol_sprites = full_sprite
-main_entity.minus_symbol_sprites = full_sprite
-main_entity.multiply_symbol_sprites = full_sprite
-main_entity.divide_symbol_sprites = full_sprite
+for _, field in pairs(const.ac_sprites) do
+    main_entity[field] = full_sprite
+end
 
 -- EntityPrototype
 main_entity.icon = const:png('icons/stack-combinator')
@@ -52,45 +53,7 @@ main_entity.minable.result = const.stack_combinator_name
 
 data:extend { main_entity }
 
----@type data.ConstantCombinatorPrototype
-local output_entity = {
-    -- PrototypeBase
-    type = 'constant-combinator',
-    name = const.stack_combinator_output_name,
-    hidden = true,
-    hidden_in_factoriopedia = true,
-
-    -- ConstantCombinatorPrototype
-    sprites = util.empty_sprite(),
-    activity_led_light_offsets = { { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } },
-    circuit_wire_connection_points = sprites.empty_connection_points(4),
-    circuit_wire_max_distance = default_circuit_wire_max_distance,
-    draw_copper_wires = false,
-    draw_circuit_wires = false,
-
-    -- EntityWithHealthPrototype
-    max_health = 1,
-
-    -- EntityPrototype
-    collision_box = { { -0.01, -0.01 }, { 0.01, 0.01 } },
-    collision_mask = collision_mask_util.new_mask(),
-    selection_box = { { -0.01, -0.01 }, { 0.01, 0.01 } },
-    flags = {
-        'placeable-off-grid',
-        'not-repairable',
-        'not-on-map',
-        'not-deconstructable',
-        'not-blueprintable',
-        'hide-alt-info',
-        'not-flammable',
-        'not-upgradable',
-        'not-in-kill-statistics',
-        'not-in-made-in',
-    },
-    minable = nil,
-    selection_priority = 1,
-    allow_copy_paste = false,
-    selectable_in_game = false,
-}
+local output_entity = data_util.copy_prototype(data.raw['constant-combinator']['constant-combinator'],
+    const.stack_combinator_output_name, true) --[[@as data.ConstantCombinatorPrototype ]]
 
 data:extend { output_entity }
