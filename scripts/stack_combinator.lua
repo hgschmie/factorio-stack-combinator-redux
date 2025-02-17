@@ -221,17 +221,20 @@ end
 
 --- Destroys an entity.
 ---@param entity_id integer? main unit number (== entity id)
+---@return boolean true if an actual entity was destroyed
 function StaCo:destroy(entity_id)
-    if not entity_id then return end
+    if not entity_id then return false end
     assert(entity_id)
 
     local entity_data = self:removeEntity(entity_id)
-    if not entity_data then return end
+    if not entity_data then return false end
 
     entity_data.main = nil
 
     if Is.Valid(entity_data.output) then entity_data.output.destroy() end
     entity_data.output = nil
+
+    return true
 end
 
 ------------------------------------------------------------------------

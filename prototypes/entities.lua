@@ -52,7 +52,6 @@ main_entity.minable.result = const.stack_combinator_name
 
 data:extend { main_entity }
 
-local output_entity = data_util.copy_prototype(data.raw['constant-combinator']['constant-combinator'],
-    const.stack_combinator_output_name, true) --[[@as data.ConstantCombinatorPrototype ]]
+local output_entity = data_util.copy_entity_prototype(data.raw['constant-combinator']['constant-combinator'], const.stack_combinator_output_name, true) --[[@as data.ConstantCombinatorPrototype ]]
 
 data:extend { output_entity }

@@ -1,7 +1,6 @@
----@meta
-------------------------------------------------------------------------
--- event registration
-------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- event setup for the mod
+--------------------------------------------------------------------------------
 assert(script)
 
 local Event = require('stdlib.event.event')
@@ -32,9 +31,6 @@ local function onEntityCreated(event)
         tags = tags or entity_ghost.tags
     end
 
-    -- register entity for destruction
-    script.register_on_object_destroyed(entity)
-
     local config = tags and tags[const.config_tag_name] --[[@as stack_combinator.Config]]
 
     This.StackCombinator:create(entity, player_index, config)
@@ -43,9 +39,13 @@ end
 ---@param event EventData.on_player_mined_entity | EventData.on_robot_mined_entity | EventData.on_space_platform_mined_entity | EventData.script_raised_destroy
 local function onEntityDeleted(event)
     local entity = event and event.entity
-    local unit_number = entity.unit_number
+    if not (entity and entity.valid) then return end
+    assert(entity.unit_number)
 
-    This.StackCombinator:destroy(unit_number)
+    if This.StackCombinator:destroy(entity.unit_number) then
+        Framework.gui_manager:destroy_gui_by_entity_id(entity.unit_number)
+        storage.last_tick_entity = nil
+    end
 end
 
 --------------------------------------------------------------------------------
@@ -55,19 +55,42 @@ end
 ---@param event EventData.on_object_destroyed
 local function onObjectDestroyed(event)
     -- clear out references if applicable
-    This.StackCombinator:destroy(event.useful_id)
+    if This.StackCombinator:destroy(event.useful_id) then
+        storage.last_tick_entity = nil
+        Framework.gui_manager:destroy_gui_by_entity_id(event.useful_id)
+    end
 end
 
 --------------------------------------------------------------------------------
--- serialization for Blueprinting and Tombstones
+-- Entity cloning
 --------------------------------------------------------------------------------
 
----@param entity LuaEntity
----@return table<string, any>?
-local function serialize_config(entity)
-    if not entity and entity.valid then return end
+---@param event EventData.on_entity_cloned
+local function onEntityCloned(event)
+    if not (event.source and event.source.valid and event.destination and event.destination.valid) then return end
 
-    return This.StackCombinator:serializeConfiguration(entity)
+    local src_data = This.StackCombinator:getEntity(event.source.unit_number)
+    if not src_data then return end
+
+    local cloned_entities = event.destination.surface.find_entities_filtered {
+        area = Position(event.destination.position):expand_to_area(0.5),
+        name = const.internal_entity_names,
+    }
+
+    for _, cloned_entity in pairs(cloned_entities) do
+        cloned_entity.destroy()
+    end
+
+    This.StackCombinator:create(event.destination, nil, src_data.config)
+end
+
+---@param event EventData.on_entity_cloned
+local function onInternalEntityCloned(event)
+    if not (event.source and event.source.valid and event.destination and event.destination.valid) then return end
+
+    -- delete the destination entity, it is not needed as the internal structure of the
+    -- Stack combinator is recreated when the main entity is cloned
+    event.destination.destroy()
 end
 
 --------------------------------------------------------------------------------
@@ -89,33 +112,15 @@ local function onEntitySettingsPasted(event)
 end
 
 --------------------------------------------------------------------------------
--- Entity cloning
+-- serialization for Blueprinting and Tombstones
 --------------------------------------------------------------------------------
 
----@param event EventData.on_entity_cloned
-local function onEntityCloned(event)
-    if not (event.source and event.source.valid and event.destination and event.destination.valid) then return end
+---@param entity LuaEntity
+---@return table<string, any>?
+local function serialize_config(entity)
+    if not entity and entity.valid then return end
 
-    local src_data = This.StackCombinator:getEntity(event.source.unit_number)
-    if not src_data then return end
-
-    local cloned_entities = event.destination.surface.find_entities(Position(event.destination.position):expand_to_area(0.5))
-    for _, cloned_entity in pairs(cloned_entities) do
-        if const.internal_entity_names_map[cloned_entity.name] then
-            cloned_entity.destroy()
-        end
-    end
-
-    This.StackCombinator:create(event.destination, nil, src_data.config)
-end
-
----@param event EventData.on_entity_cloned
-local function onInternalEntityCloned(event)
-    if not (event.source and event.source.valid and event.destination and event.destination.valid) then return end
-
-    -- delete the destination entity, it is not needed as the internal structure of the
-    -- Stack combinator is recreated when the main entity is cloned
-    event.destination.destroy()
+    return This.StackCombinator:serializeConfiguration(entity)
 end
 
 --------------------------------------------------------------------------------
@@ -144,7 +149,7 @@ local function onConfigurationChanged()
 end
 
 --------------------------------------------------------------------------------
--- Ticker
+-- Event ticker
 --------------------------------------------------------------------------------
 
 ---@param event EventData.on_tick
@@ -155,29 +160,21 @@ local function onTick(event)
     local index = storage.last_tick_entity
 
     if process_count > 0 then
-        local destroy_list = {}
         local entity_data
         repeat
             index, entity_data = next(entities, index)
-            if entity_data and (entity_data.main and entity_data.main.valid) then
-                if (event.tick - entity_data.tick) >= interval then
-                    if This.StackCombinator:tick(entity_data) then
-                        process_count = process_count - 1
+            if entity_data then
+                if entity_data.main and entity_data.main.valid then
+                    if (event.tick - entity_data.tick) >= interval then
+                        if This.StackCombinator:tick(entity_data) then
+                            process_count = process_count - 1
+                        end
                     end
+                else
+                    This.StackCombinator:destroy(index)
                 end
-            else
-                table.insert(destroy_list, index)
             end
         until process_count == 0 or not index
-
-        if table_size(destroy_list) > 0 then
-            for _, unit_id in pairs(destroy_list) do
-                This.StackCombinator:destroy(unit_id)
-
-                -- if the last index was destroyed, reset the scan loop index
-                if unit_id == index then index = nil end
-            end
-        end
     else
         index = nil
     end
@@ -201,13 +198,15 @@ local function register_events()
     -- entity create / delete
     Event.register(Matchers.CREATION_EVENTS, onEntityCreated, match_all_main_entities)
     Event.register(Matchers.DELETION_EVENTS, onEntityDeleted, match_all_main_entities)
-    Framework.ghost_manager:registerForName(const.stack_combinator_name)
 
-    -- Configuration changes (runtime and startup)
-    Event.on_configuration_changed(onConfigurationChanged)
+    -- manage ghost building (robot building)
+    Framework.ghost_manager:registerForName(const.stack_combinator_name)
 
     -- entity destroy (can't filter on that)
     Event.register(defines.events.on_object_destroyed, onObjectDestroyed)
+
+    -- Configuration changes (startup)
+    Event.on_configuration_changed(onConfigurationChanged)
 
     -- manage blueprinting and copy/paste
     Framework.blueprint:registerCallback(const.stack_combinator_name, serialize_config)
@@ -228,6 +227,10 @@ local function register_events()
     -- Ticker
     Event.register(defines.events.on_tick, onTick)
 end
+
+--------------------------------------------------------------------------------
+-- mod init/load code
+--------------------------------------------------------------------------------
 
 local function on_init()
     This.StackCombinator:init()
