@@ -1,6 +1,6 @@
 {
   "name": "stack-combinator-redux",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "title": "Stack Combinator (Redux)",
   "description": "A Factorio 2.0 combinator for the circuit network that manages item stack sizes and related computation.",
   "author": "hgschmie",
