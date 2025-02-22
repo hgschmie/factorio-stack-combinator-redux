@@ -27,7 +27,6 @@ local function on_entity_created(event)
 
     local entity_ghost = Framework.ghost_manager:findGhostForEntity(entity)
     if entity_ghost then
-        Framework.ghost_manager:deleteGhost(entity.unit_number)
         player_index = player_index or entity_ghost.player_index
         tags = tags or entity_ghost.tags
     end
@@ -152,7 +151,8 @@ end
 -- Event ticker
 --------------------------------------------------------------------------------
 
-local function onTick()
+---@param event EventData.on_tick
+local function onTick(event)
     local interval = Framework.settings:runtime_setting(const.settings_names.update_interval) or 6
     local entities = This.StackCombinator:entities()
     local process_count = math.ceil(table_size(entities) / interval)
