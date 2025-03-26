@@ -508,6 +508,7 @@ local function render_network_signals(gui_element, entity_data)
                         type = 'sprite',
                         style = 'framework_quality',
                         sprite = 'quality/' .. signal.signal.quality,
+                        resize_to_sprite = false,
                         enabled = true,
                     }
                 end
@@ -559,6 +560,7 @@ local function render_output_signals(gui_element, entity_data)
                     type = 'sprite',
                     style = 'framework_quality',
                     sprite = 'quality/' .. filter.value.quality,
+                    resize_to_sprite = false,
                     enabled = true,
                 }
             end
