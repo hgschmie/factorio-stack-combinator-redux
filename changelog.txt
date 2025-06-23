@@ -1,9 +1,8 @@
 ---------------------------------------------------------------------------------------------------
-Version: 0.3.2
+Version: 0.4.0
 Date: ????
-  Bugfixes:
-    - Fix oversized quality icons on non-native displays
   Changes:
+    - Use native quality rendering
 ---------------------------------------------------------------------------------------------------
 Version: 0.3.1
 Date: 2025-02-22

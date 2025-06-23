@@ -498,20 +498,12 @@ local function render_network_signals(gui_element, entity_data)
                     type = 'sprite-button',
                     sprite = signal_converter:signal_to_sprite_name(signal),
                     number = signal.count,
+                    quality = signal.signal.quality,
                     style = color_map[connector_id] .. '_circuit_network_content_slot',
                     tooltip = signal_converter:signal_to_prototype(signal).localised_name,
                     elem_tooltip = signal_converter:signal_to_elem_id(signal),
                     enabled = true,
                 }
-                if signal.signal.quality and signal.signal.quality ~= 'normal' then
-                    button.add {
-                        type = 'sprite',
-                        style = 'framework_quality',
-                        sprite = 'quality/' .. signal.signal.quality,
-                        resize_to_sprite = false,
-                        enabled = true,
-                    }
-                end
                 signal_count = signal_count + 1
             end
             while (signal_count % 10) > 0 do
@@ -550,20 +542,12 @@ local function render_output_signals(gui_element, entity_data)
                 type = 'sprite-button',
                 style = 'compact_slot',
                 number = filter.min,
+                quality = filter.value.quality,
                 sprite = signal_converter:logistic_filter_to_sprite_name(filter),
                 tooltip = signal_converter:logistic_filter_to_prototype(filter).localised_name,
                 elem_tooltip = signal_converter:logistic_filter_to_elem_id(filter),
                 enabled = true,
             }
-            if filter.value.quality and filter.value.quality ~= 'normal' then
-                button.add {
-                    type = 'sprite',
-                    style = 'framework_quality',
-                    sprite = 'quality/' .. filter.value.quality,
-                    resize_to_sprite = false,
-                    enabled = true,
-                }
-            end
         end
     end
 end
