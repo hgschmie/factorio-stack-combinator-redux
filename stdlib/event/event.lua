@@ -16,6 +16,7 @@
 local config = require('stdlib.config')
 config.control = true
 
+---@class event.Event
 local Event = {
     __class = 'Event',
     registry = {},        -- Holds registered events
@@ -114,7 +115,12 @@ local stupid_events = {
 -- Event.register(-120, function() game.print('Every 120 ticks') end
 -- -- Function call chaining
 -- Event.register(event1, handler1).register(event2, handler2)
--- @param event_id (<span class="types">@{defines.events}, @{int}, @{string}, or {@{defines.events}, @{int}, @{string},...}</span>)
+--- @param event_id defines.events | integer | string
+--- @param handler fun(event: EventData)
+--- @param filter (fun(event: EventData, pattern: any?): boolean)?
+--- @param pattern  any?
+--- @param options table<string, any>?
+--- @return event.Event
 -- @tparam function handler the function to call when the given events are triggered
 -- @tparam[opt=nil] function filter a function whose return determines if the handler is executed. event and pattern are passed into this
 -- @tparam[opt=nil] mixed pattern an invariant that can be used in the filter function, passed as the second parameter to your filter
@@ -366,7 +372,7 @@ local function dispatch_event(event, registered)
     end
 
     -- If the handler errors lets make sure someone notices
-    if not success and not Event.log_and_print(handler_result or match_result) then
+    if not success then
         -- no players received the message, force a real error so someone notices
         error(handler_result or match_result)
     end
