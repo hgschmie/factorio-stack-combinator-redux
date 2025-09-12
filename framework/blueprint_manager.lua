@@ -59,7 +59,7 @@ local function can_access_blueprint(player)
     return (player.cursor_stack.valid_for_read and player.cursor_stack.name == 'blueprint')
 end
 
----@param blueprint LuaItemStack
+---@param blueprint (LuaItemStack | LuaRecord)?
 ---@param entity_map framework.blueprint.EntityMap
 ---@param context framework.blueprint.Context
 function FrameworkBlueprintManager:augmentBlueprint(blueprint, entity_map, context)
@@ -149,7 +149,9 @@ local function on_player_setup_blueprint(event)
     local context = {}
     local entity_map = self:createEntityMap(selected_entities, context)
 
-    local blueprint_item_stack = event.stack or (can_access_blueprint(player) and player.cursor_stack)
+    -- See https://forums.factorio.com/viewtopic.php?p=661598#p661598 for the event.record / event.stack selection
+    ---@type (LuaItemStack | LuaRecord)?
+    local blueprint_item_stack = event.record or event.stack or (can_access_blueprint(player) and player.cursor_stack)
 
     if blueprint_item_stack then
         self:augmentBlueprint(blueprint_item_stack, entity_map, context)
@@ -194,7 +196,7 @@ end
 ---@param map_callback framework.blueprint.MapCallback?
 function FrameworkBlueprintManager:registerCallbackForNames(entity_names, callback, map_callback)
     assert(entity_names)
-    if type(entity_names) ~= 'table' then names = { names } end
+    if type(entity_names) ~= 'table' then entity_names = { entity_names } end
 
     for _, entity_name in pairs(entity_names) do
         self.callbacks.for_name[entity_name] = callback

@@ -1,7 +1,8 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.4.1
 Date: ????
-  Changes:
+  Bugfix:
+    - ensure that new content selection for blueprints retains combinator settings in most cases (#3, reported by @fmazur on github)
 ---------------------------------------------------------------------------------------------------
 Version: 0.4.0
 Date: 2025-06-23
