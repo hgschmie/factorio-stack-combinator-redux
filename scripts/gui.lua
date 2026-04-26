@@ -559,18 +559,18 @@ end
 local function update_gui(gui, connection_state, entity_data)
     local config = entity_data.config
 
-    local operation_mode = gui:find_element('operation-mode')
+    local operation_mode = gui:findElement('operation-mode')
     operation_mode.selected_index = config.op
-    local operation_mode_description = gui:find_element('operation-mode-description')
+    local operation_mode_description = gui:findElement('operation-mode-description')
     operation_mode_description.caption = { const:locale('operation-mode-description-' .. config.op) }
 
-    local merge_inputs = gui:find_element('merge-inputs')
+    local merge_inputs = gui:findElement('merge-inputs')
     merge_inputs.state = config.merge_inputs
 
     -- turn enabled and inverted button for the networks on and off and handle tooltips
     for _, connection_id in pairs { defines.wire_connector_id.circuit_red, defines.wire_connector_id.circuit_green } do
         local network_settings = config.network_settings[connection_id]
-        local checkbox = gui:find_element('enable-signals-' .. connection_id)
+        local checkbox = gui:findElement('enable-signals-' .. connection_id)
 
         local network_enabled = connection_state[connection_id] or false
         checkbox.state = network_settings.enable
@@ -580,25 +580,25 @@ local function update_gui(gui, connection_state, entity_data)
                 or (color_map[connection_id] .. (network_enabled and '-connected' or '-not-connected')))
         }
 
-        local invert = gui:find_element('invert-signals-' .. connection_id)
+        local invert = gui:findElement('invert-signals-' .. connection_id)
         local enabled = network_enabled and (network_settings.enable or config.merge_inputs)
         invert.state = network_settings.invert
         invert.enabled = enabled
         invert.tooltip = enabled and { const:locale('invert-signals-description-' .. connection_id) } or nil
     end
 
-    local empty_unpowered = gui:find_element('empty-unpowered')
+    local empty_unpowered = gui:findElement('empty-unpowered')
     empty_unpowered.state = config.empty_unpowered
 
-    local use_wagon_stacks = gui:find_element('use-wagon-stacks')
+    local use_wagon_stacks = gui:findElement('use-wagon-stacks')
     use_wagon_stacks.switch_state = values_on_off[config.use_wagon_stacks]
 
-    local process_fluid = gui:find_element('process-fluid')
+    local process_fluid = gui:findElement('process-fluid')
     process_fluid.state = config.process_fluids or false
     process_fluid.enabled = config.use_wagon_stacks
 
     for _, value in pairs(const.defines.non_item_signal_type) do
-        local radio_button = gui:find_element('non-item-signals-' .. tostring(value))
+        local radio_button = gui:findElement('non-item-signals-' .. tostring(value))
         radio_button.state = config.non_item_signals == value
     end
 end
@@ -609,25 +609,25 @@ end
 local function refresh_gui(gui, entity_data)
     local entity_status = entity_data.main.status or defines.entity_status.working
 
-    local lamp = gui:find_element('status-lamp')
+    local lamp = gui:findElement('status-lamp')
     lamp.sprite = tools.STATUS_SPRITES[entity_status]
 
-    local status = gui:find_element('status-label')
+    local status = gui:findElement('status-label')
     status.caption = { tools.STATUS_NAMES[entity_status] }
 
     -- render input signals
-    local input_signals = gui:find_element('input-signal-view')
+    local input_signals = gui:findElement('input-signal-view')
     render_network_signals(input_signals, entity_data)
 
     -- render output signals
-    local output_signals = gui:find_element('output-signal-view')
+    local output_signals = gui:findElement('output-signal-view')
     render_output_signals(output_signals, entity_data)
 
     local  connection_state = {}
 
     -- render network ids for Input/Output network header
     for _, pin in pairs { 'input', 'output' } do
-        local connections = gui:find_element('connections_' .. pin)
+        local connections = gui:findElement('connections_' .. pin)
         connections.caption = { 'gui-control-behavior.not-connected' }
         for _, color in pairs { 'red', 'green' } do
             local pin_name = ('combinator_%s_%s'):format(pin, color)
@@ -636,7 +636,7 @@ local function refresh_gui(gui, entity_data)
             local wire_connector = entity_data.main.get_wire_connector(connector_id, false)
             local connect = false
 
-            local wire_connection = gui:find_element(pin_name)
+            local wire_connection = gui:findElement(pin_name)
             wire_connection.caption = nil
 
             if wire_connector then
