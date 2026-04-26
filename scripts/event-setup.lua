@@ -43,7 +43,7 @@ local function on_entity_deleted(event)
     assert(entity.unit_number)
 
     if This.StackCombinator:destroy(entity.unit_number) then
-        Framework.gui_manager:destroy_gui_by_entity_id(entity.unit_number)
+        Framework.gui_manager:destroyGuiByEntityId(entity.unit_number)
         storage.last_tick_entity = nil
     end
 end
@@ -57,7 +57,7 @@ local function on_object_destroyed(event)
     -- clear out references if applicable
     if This.StackCombinator:destroy(event.useful_id) then
         storage.last_tick_entity = nil
-        Framework.gui_manager:destroy_gui_by_entity_id(event.useful_id)
+        Framework.gui_manager:destroyGuiByEntityId(event.useful_id)
     end
 end
 
