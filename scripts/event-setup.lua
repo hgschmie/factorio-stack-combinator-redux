@@ -20,7 +20,7 @@ local const = require('lib.constants')
 ---@param event EventData.on_built_entity | EventData.on_robot_built_entity | EventData.on_space_platform_built_entity | EventData.script_raised_revive | EventData.script_raised_built
 local function on_entity_created(event)
     local entity = event and event.entity
-    if not entity then return end
+    if not (entity and entity.valid) then return end
 
     local player_index = event.player_index
     local tags = event.tags
@@ -142,7 +142,7 @@ end
 ---@param entity LuaEntity
 ---@return table<string, any>?
 local function serialize_config(entity)
-    if not entity and entity.valid then return end
+    if not (entity and entity.valid) then return end
 
     return This.StackCombinator:serializeConfiguration(entity)
 end
@@ -157,6 +157,7 @@ local function onTick(event)
     local entities = This.StackCombinator:entities()
     local process_count = math.ceil(table_size(entities) / interval)
     local index = storage.last_tick_entity
+    if index and not entities[index] then index = nil end
 
     if process_count > 0 then
         local entity_data

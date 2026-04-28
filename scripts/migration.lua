@@ -172,7 +172,7 @@ local function create_tags(blueprint_entity)
     config.op = staco_op_map[parameters.operation]
 
     return {
-        ['const.config_tag_name'] = config
+        [const.config_tag_name] = config
     }
 end
 

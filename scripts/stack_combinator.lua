@@ -224,7 +224,6 @@ end
 ---@return boolean true if an actual entity was destroyed
 function StaCo:destroy(entity_id)
     if not entity_id then return false end
-    assert(entity_id)
 
     local entity_data = self:removeEntity(entity_id)
     if not entity_data then return false end
@@ -348,12 +347,9 @@ function StaCo:compute(signals, filters, config, connection_id)
 
     for _, signal in pairs(signals) do
         local filter = signal_converter:signal_to_logistic_filter(signal)
-        local name = filter.value.name
-        local value = filter.min
+        local name = assert(filter.value.name)
+        local value = assert(filter.min)
         local type = filter.value.type
-
-        assert(name)
-        assert(value)
 
         local is_item = (type == 'item')
         local is_fluid = config.use_wagon_stacks and config.process_fluids and (type == 'fluid')

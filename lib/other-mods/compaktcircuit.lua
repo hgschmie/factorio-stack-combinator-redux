@@ -2,8 +2,9 @@
 -- CompactCircuit (https://mods.factorio.com/mod/compaktcircuit) support
 --------------------------------------------------------------------------------
 
+local util = require('util')
+
 local const = require('lib.constants')
-local Is = require('stdlib.utils.is')
 
 local CompaktCircuitSupport = {}
 
@@ -11,7 +12,7 @@ local CompaktCircuitSupport = {}
 
 ---@param entity LuaEntity
 local function ccs_get_info(entity)
-    if not Is.Valid(entity) then return end
+    if not (entity and entity.valid) then return end
 
     local entity_data = This.StackCombinator:getEntity(entity.unit_number)
     if not entity_data then return end
