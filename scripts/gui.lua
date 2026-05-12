@@ -623,7 +623,7 @@ local function refresh_gui(gui, entity_data)
     local output_signals = gui:findElement('output-signal-view')
     render_output_signals(output_signals, entity_data)
 
-    local  connection_state = {}
+    local connection_state = {}
 
     -- render network ids for Input/Output network header
     for _, pin in pairs { 'input', 'output' } do
@@ -650,6 +650,7 @@ local function refresh_gui(gui, entity_data)
             wire_connection.visible = connect
             if connect then
                 connections.caption = { 'gui-control-behavior.connected-to-network' }
+                ---@diagnostic disable-next-line: need-check-nil
                 wire_connection.caption = { ('gui-control-behavior.%s-network-id'):format(color), wire_connector.network_id }
             end
         end

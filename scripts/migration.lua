@@ -29,7 +29,7 @@ end
 ---@param dst LuaEntity
 local function copy_wire_connections(src, dst)
     for wire_connector_id, wire_connector in pairs(src.get_wire_connectors(true)) do
-        local dst_connector = dst.get_wire_connector(wire_connector_id, true)
+        local dst_connector = assert(dst.get_wire_connector(wire_connector_id, true))
         for _, connection in pairs(wire_connector.connections) do
             if connection.origin == defines.wire_origin.player then
                 dst_connector.connect_to(connection.target, false, connection.origin)
@@ -62,7 +62,7 @@ local function create_config_from_staco(staco)
     local control = staco.get_or_create_control_behavior() --[[@as LuaArithmeticCombinatorControlBehavior]]
     assert(control)
 
-    local parameters = control.parameters
+    local parameters = assert(control.parameters)
 
     local invert = staco_signal_map[parameters.first_signal.name]
     if invert then

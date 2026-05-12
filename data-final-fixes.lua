@@ -15,4 +15,5 @@ if Framework.settings:startup_setting(const.settings_names.migrate_stacos) then
     end
 end
 
+---@diagnostic disable-next-line: undefined-field
 Framework.post_data_final_fixes_stage()
