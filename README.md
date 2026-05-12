@@ -78,24 +78,24 @@ If no wagon signal is present, the combinator outputs no signal. This is differe
 
 In normal operation, the combinator only processes signals that represents items. It may also process fluid signals if Wagon Stack mode is activated and the Process fluid signals checkbox is checked. All other signals are controlled by this setting
 
-* *Passthrough* - Non-processed signals are passed through. They might have been inverted if any of the "Invert signals" box for an input wire was checked.
-* *Invert* - Non-processed signals are inverted. If any of the "Invert signals" box for an input wire was checked, a signal might be inverted twice (back to its original value).
-* *Drop* - Non-processed signals are dropped from the output.
+* _Passthrough_ - Non-processed signals are passed through. They might have been inverted if any of the "Invert signals" box for an input wire was checked.
+* _Invert_ - Non-processed signals are inverted. If any of the "Invert signals" box for an input wire was checked, a signal might be inverted twice (back to its original value).
+* _Drop_ - Non-processed signals are dropped from the output.
 
 ## Settings
 
 ### Startup settings
 
-* *Migrate 1.1 Stack combinators* - When set before loading a game, all existing 1.1 Stack combinators will be migrated to Stack Combinator Redux.
+* _Migrate 1.1 Stack combinators_ - When set before loading a game, all existing 1.1 Stack combinators will be migrated to Stack Combinator Redux.
 
 ### Per map settings (can be changed at runtime)
 
-* *Update interval (in ticks)* - Controls how often a combinator gets updated. The default is 6 which is 10 times per second. Warning. Setting this to very low values with many stack combinators will impact FPS/UPS.
+* _Update interval (in ticks)_ - Controls how often a combinator gets updated. The default is 6 which is 10 times per second. Warning. Setting this to very low values with many stack combinators will impact FPS/UPS.
 
 ### Per player settings (can be changed at runtime)
 
-* *Output signals require power* - This is the default setting for the UI checkbox. Any newly created combinator will use this as the default value.
-* *Handle non-processed signals* - This is the default setting for the UI selector. Any newly created combinator will use this as the default value.
+* _Output signals require power_ - This is the default setting for the UI checkbox. Any newly created combinator will use this as the default value.
+* _Handle non-processed signals_ - This is the default setting for the UI selector. Any newly created combinator will use this as the default value.
 
 ## Migrating from the 1.1 Stack combinator module
 
@@ -108,7 +108,7 @@ When activating the "Migrate 1.1 Stack combinators" setting, all existing, old s
 
 ## Legal and other stuff
 
-(C) 2025 Henning Schmiedehausen (hgschmie)
+(C) 2025-2026 Henning Schmiedehausen (hgschmie)
 
 Report Bugs either directly [on github](https://github.com/hgschmie/factorio-stack-combinator-redux/issues) (preferred!) or on the [Mod discussion forum](https://mods.factorio.com/mod/stack-combinator-redux/discussion).
 
