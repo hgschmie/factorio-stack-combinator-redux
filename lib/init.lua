@@ -7,12 +7,11 @@ local this = require('lib.this')
 
 -- Framework core
 local framework = require('framework.init')
+framework:init(this.framework_init)
 
 if this.settings then
     framework.settings:add_defaults(framework.settings)
 end
-
-framework:init(this.framework_init)
 
 return function()
     return this, framework

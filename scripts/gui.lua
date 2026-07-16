@@ -812,7 +812,7 @@ end
 ---@return boolean
 function Gui.guiUpdater(gui)
     local entity_data = This.StackCombinator:getEntity(gui.entity_id)
-    if not entity_data then return false end
+    if not entity_data and entity_data.main.valid then return false end
 
     ---@type stack_combinator.GuiContext
     local context = gui.context
@@ -855,3 +855,5 @@ end
 
 Event.on_init(init_gui)
 Event.on_load(init_gui)
+
+return Gui

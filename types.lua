@@ -14,7 +14,6 @@
 ---@class stack_combinator.Storage
 ---@field count integer
 ---@field entities table<number, stack_combinator.Data>
----@field open_guis table<integer, stack_combinator.Data>
 
 ---@class stack_combinator.Config
 ---@field status defines.entity_status?

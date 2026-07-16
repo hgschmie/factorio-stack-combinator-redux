@@ -9,6 +9,8 @@ local Is = require('stdlib.utils.is')
 
 ----------------------------------------------------------------------------------------------------
 
+Framework = nil
+
 --- Framework central access point
 -- The framework singleton, provides access to well known constants and the Framework components
 -- other components.

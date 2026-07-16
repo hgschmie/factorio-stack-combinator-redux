@@ -40,4 +40,17 @@ function This.framework_init()
     }
 end
 
+function This:init()
+    ---@type stack_combinator.Storage
+    storage.entity_storage = storage.entity_storage or {
+        count = 0,
+        entities = {},
+    }
+end
+
+---@return stack_combinator.Storage
+function This.storage()
+    return assert(storage.entity_storage)
+end
+
 return This

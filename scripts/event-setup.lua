@@ -6,6 +6,7 @@ assert(script)
 local Event = require('stdlib.event.event')
 local Player = require('stdlib.event.player')
 local Position = require('stdlib.area.position')
+local Ticker = require('framework.ticker')
 
 local Matchers = require('framework.matchers')
 
@@ -22,16 +23,24 @@ local function on_entity_created(event)
     local entity = event and event.entity
     if not (entity and entity.valid) then return end
 
-    local player_index = event.player_index
+    ---@type Tags?
     local tags = event.tags
+    ---@type integer?
+    local player_index = event.player_index
 
+    ---@type stack_combinator.Config?
+    local config = nil
+
+    -- see if a ghost (with tags) from a blueprint is replaced
     local entity_ghost = Framework.Ghost:findGhostForEntity(entity)
     if entity_ghost then
-        player_index = player_index or entity_ghost.player_index
         tags = tags or entity_ghost.tags
+        player_index = player_index or entity_ghost.player_index
     end
 
-    local config = tags and tags[const.config_tag_name] --[[@as stack_combinator.Config]]
+    if tags then
+        config = This.StackCombinator:deserializeConfiguration(tags)
+    end
 
     This.StackCombinator:create(entity, player_index, config)
 end
@@ -40,24 +49,9 @@ end
 local function on_entity_deleted(event)
     local entity = event and event.entity
     if not (entity and entity.valid) then return end
-    assert(entity.unit_number)
 
     if This.StackCombinator:destroy(entity.unit_number) then
         Framework.gui_manager:destroyGuiByEntityId(entity.unit_number)
-        storage.last_tick_entity = nil
-    end
-end
-
---------------------------------------------------------------------------------
--- Entity destruction
---------------------------------------------------------------------------------
-
----@param event EventData.on_object_destroyed
-local function on_object_destroyed(event)
-    -- clear out references if applicable
-    if This.StackCombinator:destroy(event.useful_id) then
-        storage.last_tick_entity = nil
-        Framework.gui_manager:destroyGuiByEntityId(event.useful_id)
     end
 end
 
@@ -99,8 +93,7 @@ end
 local function on_entity_settings_pasted(event)
     if not (event and event.source and event.source.valid and event.destination and event.destination.valid) then return end
 
-    local player = Player.get(event.player_index)
-    if not (player and player.valid and player.force == event.source.force and player.force == event.destination.force) then return end
+    if event.source.force ~= event.destination.force then return end
 
     local src_entity = This.StackCombinator:getEntity(event.source.unit_number)
     local dst_entity = This.StackCombinator:getEntity(event.destination.unit_number)
@@ -115,7 +108,7 @@ end
 --------------------------------------------------------------------------------
 
 local function on_configuration_changed()
-    This.StackCombinator:init()
+    This:init()
 
     -- enable if circuit network is researched.
     for _, force in pairs(game.forces) do
@@ -151,35 +144,44 @@ end
 -- Event ticker
 --------------------------------------------------------------------------------
 
----@param event EventData.on_tick
-local function onTick(event)
-    local interval = Framework.settings:runtime_setting(const.settings_names.update_interval) or 6
-    local entities = This.StackCombinator:entities()
-    local process_count = math.ceil(table_size(entities) / interval)
-    local index = storage.last_tick_entity
-    if index and not entities[index] then index = nil end
-
-    if process_count > 0 then
-        local entity_data
-        repeat
-            index, entity_data = next(entities, index)
-            if entity_data then
-                if entity_data.main and entity_data.main.valid then
-                    if (event.tick - entity_data.tick) >= interval then
-                        if This.StackCombinator:tick(entity_data) then
-                            process_count = process_count - 1
-                        end
-                    end
-                else
-                    This.StackCombinator:destroy(index)
-                end
-            end
-        until process_count == 0 or not index
+---@param context ff2.ticker.TickerContext
+---@param values ff2.ticker.TickerContext
+local function ticker_unit_of_work(context, values)
+    local staco_index = context.index
+    local staco_entity = values.index
+    if staco_entity.main and staco_entity.main.valid then
+        This.StackCombinator:tick(staco_entity)
     else
-        index = nil
+        This.StackCombinator:destroy(staco_index)
+    end
+end
+
+local function on_tick()
+    local ticker_info = Ticker.getTicker(const.stack_combinator_name)
+
+    local staco_storage = This.storage()
+    if staco_storage.count == 0 then return end
+
+    local interval = Framework.settings:runtime_setting(const.settings_names.update_interval) or 6
+
+    local entities_per_tick = math.max(1, math.ceil(staco_storage.count / interval)) -- at least one
+
+    local context = ticker_info.context or {}
+
+    local iterator = Ticker.createWorkIterator {
+        context = context,
+        field_name = 'index',
+        iterable = staco_storage.entities,
+    }
+
+    while entities_per_tick > 0 do
+        iterator.process(ticker_unit_of_work)
+
+        entities_per_tick = entities_per_tick - 1
     end
 
-    storage.last_tick_entity = index
+    ticker_info.context = context
+    ticker_info.last_tick = game.tick
 end
 
 --------------------------------------------------------------------------------
@@ -204,9 +206,6 @@ local function register_events()
         names = const.stack_combinator_name
     }
 
-    -- entity destroy (can't filter on that)
-    Event.register(defines.events.on_object_destroyed, on_object_destroyed)
-
     -- Configuration changes (startup)
     Event.on_configuration_changed(on_configuration_changed)
 
@@ -227,7 +226,7 @@ local function register_events()
     Event.register(defines.events.on_entity_settings_pasted, on_entity_settings_pasted, match_main_entity)
 
     -- Ticker
-    Event.register(defines.events.on_tick, onTick)
+    Event.on_nth_tick(1, on_tick)
 end
 
 --------------------------------------------------------------------------------
@@ -235,7 +234,7 @@ end
 --------------------------------------------------------------------------------
 
 local function on_init()
-    This.StackCombinator:init()
+    This:init()
     register_events()
 end
 

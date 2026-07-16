@@ -5,8 +5,6 @@ assert(script)
 
 local util = require('util')
 
-local Is = require('stdlib.utils.is')
-
 local signal_converter = require('framework.signal_converter')
 
 local const = require('lib.constants')
@@ -42,64 +40,53 @@ local StaCo = {
 }
 
 ------------------------------------------------------------------------
--- init
-------------------------------------------------------------------------
-
-function StaCo:init()
-    ---@type stack_combinator.Storage
-    storage.entity_storage = storage.entity_storage or {
-        count = 0,
-        entities = {},
-        open_guis = {},
-    }
-end
-
-------------------------------------------------------------------------
 -- attribute getters/setters
 ------------------------------------------------------------------------
 
 --- Returns the registered total count
 ---@return integer count The total count of entities
 function StaCo:entityCount()
-    return storage.entity_storage.count
+    return This.storage().count
 end
 
 --- Returns data for all entities.
 ---@return table<integer, stack_combinator.Data> entities
 function StaCo:entities()
-    return storage.entity_storage.entities
+    return This.storage().entities
 end
 
 --- Returns data for a given entity.
 ---@param entity_id integer main unit number (== entity id)
 ---@return stack_combinator.Data? entity
 function StaCo:getEntity(entity_id)
-    return storage.entity_storage.entities[entity_id]
+    return This.storage().entities[entity_id]
 end
 
 --- Registers and entity.
 ---@param entity_id integer The unit_number of the primary
 ---@param entity_data stack_combinator.Data
 function StaCo:registerEntity(entity_id, entity_data)
-    assert(storage.entity_storage.entities[entity_id] == nil)
-    assert(Is.Valid(entity_data.main) and entity_data.main.unit_number == entity_id)
+    local staco_storage = This.storage()
+    assert(staco_storage.entities[entity_id] == nil)
+    assert(entity_data.main and entity_data.main.valid and entity_data.main.unit_number == entity_id)
 
-    storage.entity_storage.entities[entity_id] = entity_data
-    storage.entity_storage.count = storage.entity_storage.count + 1
+    staco_storage.entities[entity_id] = entity_data
+    staco_storage.count = staco_storage.count + 1
 end
 
 --- Removes an entity.
 ---@param entity_id integer The unit_number of the primary
 ---@return stack_combinator.Data? entity_data
 function StaCo:removeEntity(entity_id)
-    local result = storage.entity_storage.entities[entity_id]
+    local staco_storage = This.storage()
+    local result = staco_storage.entities[entity_id]
     if result then
-        storage.entity_storage.entities[entity_id] = nil
-        storage.entity_storage.count = storage.entity_storage.count - 1
+        staco_storage.entities[entity_id] = nil
+        staco_storage.count = staco_storage.count - 1
 
-        if storage.entity_storage.count < 0 then
-            storage.entity_storage.count = table_size(storage.entity_storage.entities)
-            Framework.logger:logf('Entity count got negative (bug), size is now: %d', storage.entity_storage.count)
+        if staco_storage.count < 0 then
+            staco_storage.count = table_size(staco_storage.entities)
+            Framework.logger:logf('Entity count got negative (bug), size is now: %d', staco_storage.count)
         end
     end
 
@@ -121,7 +108,8 @@ function StaCo:createConfig(parent_config, player_index)
     local default_config = {
         op = const.defines.operations.multiply,
         empty_unpowered = player_index and Framework.settings:player_setting(const.settings_names.empty_unpowered, player_index) or false,
-        non_item_signals = player_index and tonumber(Framework.settings:player_setting(const.settings_names.non_item_signals, player_index)) or const.defines.non_item_signal_type.drop,
+        non_item_signals = player_index and tonumber(Framework.settings:player_setting(const.settings_names.non_item_signals, player_index)) or
+            const.defines.non_item_signal_type.drop,
         merge_inputs = false,
         use_wagon_stacks = false,
         process_fluids = false,
@@ -159,10 +147,10 @@ local function create_output(main)
     local main_wire_connectors = main.get_wire_connectors(true)
     local output_wire_connectors = output.get_wire_connectors(true)
 
-    main_wire_connectors[defines.wire_connector_id.combinator_output_red].connect_to(output_wire_connectors[defines.wire_connector_id.circuit_red], false,
-        defines.wire_origin.script)
-    main_wire_connectors[defines.wire_connector_id.combinator_output_green].connect_to(output_wire_connectors[defines.wire_connector_id.circuit_green], false,
-        defines.wire_origin.script)
+    main_wire_connectors[defines.wire_connector_id.combinator_output_red]
+        .connect_to(output_wire_connectors[defines.wire_connector_id.circuit_red], false, defines.wire_origin.script)
+    main_wire_connectors[defines.wire_connector_id.combinator_output_green]
+        .connect_to(output_wire_connectors[defines.wire_connector_id.circuit_green], false, defines.wire_origin.script)
 
     return output
 end
@@ -174,7 +162,7 @@ end
 --- Serializes the configuration suitable for blueprinting and tombstone management.
 ---
 ---@param entity LuaEntity
----@return table<string, any>?
+---@return Tags?
 function StaCo:serializeConfiguration(entity)
     local entity_data = self:getEntity(entity.unit_number)
     if not entity_data then return end
@@ -182,6 +170,14 @@ function StaCo:serializeConfiguration(entity)
     return {
         [const.config_tag_name] = entity_data.config,
     }
+end
+
+---@param tags Tags
+---@return stack_combinator.Config?
+function StaCo:deserializeConfiguration(tags)
+    if not (tags and tags[const.config_tag_name]) then return nil end
+    local config = util.copy(tags[const.config_tag_name])
+    return config
 end
 
 ------------------------------------------------------------------------
@@ -195,7 +191,7 @@ end
 ---@param config stack_combinator.Config?
 ---@return stack_combinator.Data?
 function StaCo:create(main, player_index, config)
-    if not Is.Valid(main) then return nil end
+    if not (main and main.valid) then return nil end
 
     local entity_id = main.unit_number --[[@as integer]]
 
@@ -228,7 +224,7 @@ function StaCo:destroy(entity_id)
 
     entity_data.main = nil
 
-    if Is.Valid(entity_data.output) then entity_data.output.destroy() end
+    if entity_data.output then entity_data.output.destroy() end
     entity_data.output = nil
 
     return true
@@ -274,8 +270,7 @@ local function set_filters(entity_data, filters)
         end
     end
 
-    local output = entity_data.output.get_control_behavior() --[[@as LuaConstantCombinatorControlBehavior ]]
-    assert(output)
+    local output = assert(entity_data.output.get_or_create_control_behavior()) --[[@as LuaConstantCombinatorControlBehavior ]]
     assert(output.sections_count == 1)
     local section = output.sections[1]
     assert(section.type == defines.logistic_section_type.manual)
@@ -293,20 +288,20 @@ local function create_key(signal)
 end
 
 ---@class stack_combinator.WagonStack
----@field cargo number
----@field fluid number
-local empty_wagon_stack = {
-    cargo = 1,
-    fluid = 1,
+---@field cargo integer
+---@field fluid integer
+local EMPTY_WAGON_STACK = {
+    cargo = 0,
+    fluid = 0,
 }
 
 ---@type table<string, fun(prototype: LuaEntityPrototype, wagon_stacks: stack_combinator.WagonStack, count: number)>
 local wagon_type = {
     ['cargo-wagon'] = function(prototype, wagon_stacks, count)
-            local cargo_stack = prototype.get_inventory_size(defines.inventory.cargo_wagon)
-            wagon_stacks.cargo = wagon_stacks.cargo + (cargo_stack and (cargo_stack * count) or 0)
+        local cargo_stack = prototype.get_inventory_size(defines.inventory.cargo_wagon)
+        wagon_stacks.cargo = wagon_stacks.cargo + (cargo_stack and (cargo_stack * count) or 0)
     end,
-    ['fluid-wagon'] = function (prototype, wagon_stacks, count)
+    ['fluid-wagon'] = function(prototype, wagon_stacks, count)
         local fluid_stack = prototype.fluid_capacity
         wagon_stacks.fluid = wagon_stacks.fluid + (fluid_stack and (fluid_stack * count) or 0)
     end
@@ -315,16 +310,11 @@ local wagon_type = {
 ---@param signals Signal[]
 ---@return stack_combinator.WagonStack
 local function compute_wagon_stacks(signals)
-
-    ---@type stack_combinator.WagonStack
-    local wagon_stack = {
-        cargo = 0,
-        fluid = 0,
-    }
+    local wagon_stack = util.copy(EMPTY_WAGON_STACK)
 
     for _, signal in pairs(signals) do
         local prototype = prototypes.entity[signal.signal.name]
-        if Is.Valid(prototype) and wagon_type[prototype.type] then
+        if (prototype and prototype.valid) and wagon_type[prototype.type] then
             wagon_type[prototype.type](prototype, wagon_stack, signal.count)
         end
     end
@@ -333,14 +323,15 @@ local function compute_wagon_stacks(signals)
 end
 
 --- Convert circuit network signal values to their stack sizes
----@param signals (Signal[])?
+---@param signals Signal[]?
 ---@param filters table<string, LogisticFilter>
 ---@param config stack_combinator.Config
 ---@param connection_id defines.wire_connector_id?
 function StaCo:compute(signals, filters, config, connection_id)
     if not signals then return end
 
-    local wagon_stacks = config.use_wagon_stacks and compute_wagon_stacks(signals) or empty_wagon_stack
+
+    local wagon_stacks = config.use_wagon_stacks and compute_wagon_stacks(signals) or EMPTY_WAGON_STACK
     local invert = connection_id and config.network_settings[connection_id].invert or false
 
     for _, signal in pairs(signals) do
@@ -370,8 +361,11 @@ function StaCo:compute(signals, filters, config, connection_id)
                 multiplier = multiplier * ((config.non_item_signals == const.defines.non_item_signal_type.invert) and -1 or 1)
             end
 
-            local stack = is_item and (prototype.stack_size * (config.use_wagon_stacks and wagon_stacks.cargo or 1)) or 1
-            stack = is_fluid and wagon_stacks.fluid or stack
+            local stack = is_item and prototype.stack_size or 1
+            if config.use_wagon_stacks then
+                stack = is_item and (stack * wagon_stacks.cargo) or stack
+                stack = is_fluid and (stack * wagon_stacks.fluid) or stack
+            end
 
             local result = multiplier * This.StackCombinator.compute_ops[config.op](self, value, stack)
 
