@@ -2,7 +2,7 @@
 -- data phase 3
 ------------------------------------------------------------------------
 
-require('lib.init')
+This, Framework = require('lib.init')()
 
 local const = require('lib.constants')
 local tools = require('framework.tools')

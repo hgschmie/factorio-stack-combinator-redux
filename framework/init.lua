@@ -100,7 +100,8 @@ end
 
 --- Initialize the core framework.
 --- the code itself references the global Framework table.
----@param config FrameworkConfig|function():FrameworkConfig config provider
+---@param config (FrameworkConfig|fun():FrameworkConfig) config provider
+---@return FrameworkRoot
 function FrameworkInit:init(config)
     assert(Is.Function(config) or Is.Table(config), 'configuration must either be a table or a function that provides a table')
     if Is.Function(config) then

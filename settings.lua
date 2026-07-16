@@ -1,4 +1,7 @@
-require('lib.init')
+--------------------------------------------------------------------------------
+-- settings
+--------------------------------------------------------------------------------
+This, Framework = require('lib.init')()
 
 local const = require('lib.constants')
 
@@ -62,6 +65,5 @@ data:extend(player_settings)
 data:extend(runtime_settings)
 data:extend(startup_settings)
 
---------------------------------------------------------------------------------
-
+---@diagnostic disable-next-line: undefined-field
 Framework.post_settings_stage()
