@@ -12,9 +12,6 @@ local table = require('stdlib.utils.table')
 
 ---@class stack_combinator.Constants
 local Constants = {
-    -- the current version that is the result of the latest migration
-    CURRENT_VERSION = 1,
-
     prefix = 'hps__sc-',
     name = 'stack-combinator-redux',
     root = '__stack-combinator-redux__',
@@ -23,24 +20,6 @@ local Constants = {
 }
 
 Constants.gfx_location = Constants.root .. '/graphics/'
-
---------------------------------------------------------------------------------
--- Framework intializer
---------------------------------------------------------------------------------
-
----@return FrameworkConfig config
-function Constants.framework_init()
-    return {
-        -- prefix is the internal mod prefix
-        prefix = Constants.prefix,
-        -- name is a human readable name
-        name = Constants.name,
-        -- The filesystem root.
-        root = Constants.root,
-        -- Remote interface name
-        remote_name = Constants.stack_combinator_name,
-    }
-end
 
 --------------------------------------------------------------------------------
 -- Path and name helpers

@@ -48,7 +48,6 @@ local StaCo = {
 function StaCo:init()
     ---@type stack_combinator.Storage
     storage.entity_storage = storage.entity_storage or {
-        VERSION = const.CURRENT_VERSION,
         count = 0,
         entities = {},
         open_guis = {},

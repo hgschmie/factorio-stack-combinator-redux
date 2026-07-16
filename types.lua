@@ -12,7 +12,6 @@
 ----------------------------------------------------------------------------------------------------
 
 ---@class stack_combinator.Storage
----@field VERSION integer
 ---@field count integer
 ---@field entities table<number, stack_combinator.Data>
 ---@field open_guis table<integer, stack_combinator.Data>

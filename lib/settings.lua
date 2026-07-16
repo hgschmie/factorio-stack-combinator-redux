@@ -4,7 +4,7 @@
 
 local const = require('lib.constants')
 
----@type table<FrameworkSettings.name, FrameworkSettingsGroup>
+---@type ff2.ModSettings
 local Settings = {
     runtime = {
         [const.settings_names.update_interval] = { key = const.settings.update_interval, value = 6 },

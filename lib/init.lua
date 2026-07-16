@@ -2,10 +2,18 @@
 --- Global definitions included in all phases
 ----------------------------------------------------------------------------------------------------
 
-local const = require('lib.constants')
+-- mod code
+local this = require('lib.this')
 
 -- Framework core
-require('framework.init'):init(const.framework_init)
+local framework = require('framework.init')
 
--- mod code
-require('lib.this')
+if this.settings then
+    framework.settings:add_defaults(framework.settings)
+end
+
+framework:init(this.framework_init)
+
+return function()
+    return this, framework
+end

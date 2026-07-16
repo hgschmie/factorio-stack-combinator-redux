@@ -49,6 +49,7 @@
 --- settings.lua
 ----------------------------------------------------------------------------------------------------
 
+---@alias ff2.ModSettings table<FrameworkSettings.name, FrameworkSettingsGroup>
 ---@alias FrameworkSettingsStorage table<string, (FrameworkSettingValue|table<string, FrameworkSettingValue?>)?>?
 
 ---@class FrameworkSettingsProvider

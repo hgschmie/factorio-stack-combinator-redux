@@ -25,7 +25,7 @@ local function on_entity_created(event)
     local player_index = event.player_index
     local tags = event.tags
 
-    local entity_ghost = Framework.ghost_manager:findGhostForEntity(entity)
+    local entity_ghost = Framework.Ghost:findGhostForEntity(entity)
     if entity_ghost then
         player_index = player_index or entity_ghost.player_index
         tags = tags or entity_ghost.tags
@@ -200,7 +200,9 @@ local function register_events()
     Event.register(Matchers.DELETION_EVENTS, on_entity_deleted, match_all_main_entities)
 
     -- manage ghost building (robot building)
-    Framework.ghost_manager:registerForName(const.stack_combinator_name)
+    Framework.Ghost:registerForName {
+        names = const.stack_combinator_name
+    }
 
     -- entity destroy (can't filter on that)
     Event.register(defines.events.on_object_destroyed, on_object_destroyed)
@@ -212,9 +214,9 @@ local function register_events()
     Framework.blueprint:registerCallbackForNames(const.stack_combinator_name, serialize_config)
 
     -- manage tombstones for undo/redo and dead entities
-    Framework.tombstone:registerCallback(const.stack_combinator_name, {
+    Framework.Tombstone:registerCallback(const.stack_combinator_name, {
         create_tombstone = serialize_config,
-        apply_tombstone = Framework.ghost_manager.mapTombstoneToGhostTags,
+        apply_tombstone = Framework.Ghost.mapTombstoneToGhostTags,
     })
 
     -- Entity cloning
