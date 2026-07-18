@@ -1,10 +1,10 @@
 # Stack Combinator (Redux)
 
-A Factorio 2.0 combinator for the circuit network that manages item stack sizes and related computation.
+A Factorio 2.x combinator for the circuit network that manages item stack sizes and related computation.
 
 ![A stack combinator in the wild](https://github.com/hgschmie/factorio-stack-combinator-redux/raw/main/portal/staco-main.png)
 
-This mod is a re-implementation of the [Stack Combinator](https://mods.factorio.com/mod/stack-combinator) mod from @modo_lv. It retains its functionality but is a new implementation for Factorio 2.0.
+This mod is a re-implementation of the [Stack Combinator](https://mods.factorio.com/mod/stack-combinator) mod from @modo_lv. It retains its functionality but is a new implementation for Factorio 2.x.
 
 Migration of 1.1 stack combinators in existing saves is supported.
 

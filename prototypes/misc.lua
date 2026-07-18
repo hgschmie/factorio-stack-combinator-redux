@@ -8,7 +8,7 @@ local table = require('stdlib.utils.table')
 
 local const = require('lib.constants')
 
----@type data.RecipePrototype
+---@type RecipePrototype
 local recipe = {
     type = 'recipe',
     name = const.stack_combinator_name,
@@ -27,7 +27,7 @@ data:extend { recipe }
 assert(data.raw['technology']['circuit-network'])
 table.insert(data.raw['technology']['circuit-network'].effects, { type = 'unlock-recipe', recipe = const.stack_combinator_name })
 
----@type data.ItemPrototype
+---@type ItemPrototype
 local item = util.copy(data.raw.item['selector-combinator'])
 item.name = const.stack_combinator_name
 item.icon = const:png('icons/stack-combinator')

@@ -20,9 +20,9 @@ local function update_sprite(sprite, filename, x, y)
     sprite.y = y or 0
 end
 
-local main_entity = util.copy(data.raw['arithmetic-combinator']['arithmetic-combinator']) --[[@as data.ArithmeticCombinatorPrototype ]]
+local main_entity = util.copy(data.raw['arithmetic-combinator']['arithmetic-combinator']) --[[@as ArithmeticCombinatorPrototype ]]
 
-local selector = data.raw['selector-combinator']['selector-combinator'] --[[@as data.SelectorCombinatorPrototype ]]
+local selector = data.raw['selector-combinator']['selector-combinator'] --[[@as SelectorCombinatorPrototype ]]
 
 -- reskin as a selector combinator
 for _, field in pairs { 'sprites', 'activity_led_sprites', 'activity_led_light_offsets', 'screen_light_offsets' } do
@@ -52,6 +52,6 @@ main_entity.minable.result = const.stack_combinator_name
 
 data:extend { main_entity }
 
-local output_entity = data_util.copy_entity_prototype(data.raw['constant-combinator']['constant-combinator'], const.stack_combinator_output_name, true) --[[@as data.ConstantCombinatorPrototype ]]
+local output_entity = data_util.copy_entity_prototype(data.raw['constant-combinator']['constant-combinator'], const.stack_combinator_output_name, true) --[[@as ConstantCombinatorPrototype ]]
 
 data:extend { output_entity }
