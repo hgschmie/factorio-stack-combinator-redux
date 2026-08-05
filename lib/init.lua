@@ -10,7 +10,7 @@ local framework = require('framework.init')
 framework:init(this.framework_init)
 
 if this.settings then
-    framework.settings:add_defaults(framework.settings)
+    framework.settings:add_defaults(this.settings)
 end
 
 return function()
