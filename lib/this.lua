@@ -13,6 +13,7 @@ local This = {
     other_mods = {
         ['even-pickier-dollies'] = 'picker_dollies',
         compaktcircuit = 'compaktcircuit',
+        ['compaktcircuit-factorio21'] = 'compaktcircuit',
     },
     settings = require('lib.settings')
 }

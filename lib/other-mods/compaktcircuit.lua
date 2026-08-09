@@ -73,13 +73,13 @@ end
 --------------------------------------------------------------------------------
 
 local function ccs_init()
-    if not Framework.remote_api then return end
+    if not Framework.ExportedApis then return end
     if not remote.interfaces['compaktcircuit'] then return end
 
     if remote.interfaces['compaktcircuit']['add_combinator'] then
-        Framework.remote_api.get_info = ccs_get_info
-        Framework.remote_api.create_packed_entity = ccs_create_packed_entity
-        Framework.remote_api.create_entity = ccs_create_entity
+        Framework.ExportedApis.get_info = ccs_get_info
+        Framework.ExportedApis.create_packed_entity = ccs_create_packed_entity
+        Framework.ExportedApis.create_entity = ccs_create_entity
 
         remote.call('compaktcircuit', 'add_combinator', {
             name = const.stack_combinator_name,
