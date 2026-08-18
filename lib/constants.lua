@@ -62,6 +62,14 @@ Constants.internal_entity_names = {
 Constants.internal_entity_names_map = table.array_to_dictionary(Constants.internal_entity_names, true)
 
 ------------------------------------------------------------------------
+-- GUI input handling
+------------------------------------------------------------------------
+
+Constants.custom_input_toggle_menu = Constants:with_prefix('toggle-menu')
+Constants.custom_input_confirm_gui = Constants:with_prefix('confirm-gui')
+Constants.custom_input_ignore_close = Constants:with_prefix('ignore-close')
+
+------------------------------------------------------------------------
 -- constants and names
 ------------------------------------------------------------------------
 

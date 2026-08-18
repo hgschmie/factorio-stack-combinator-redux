@@ -9,6 +9,7 @@ local const = require('lib.constants')
 ---@field settings ff2.ModSettings
 ---@field StackCombinator stack_combinator.StaCo
 ---@field Gui stack_combinator.Gui
+---@field DescGui stack_combinator.DescGui
 local This = {
     other_mods = {
         ['even-pickier-dollies'] = 'picker_dollies',
@@ -21,6 +22,7 @@ local This = {
 if script then
     This.StackCombinator = require('scripts.stack_combinator')
     This.Gui = require('scripts.gui')
+    This.DescGui = require('scripts.desc-gui')
 end
 
 --------------------------------------------------------------------------------
