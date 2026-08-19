@@ -86,7 +86,8 @@ function StaCo:removeEntity(entity_id)
 
         if staco_storage.count < 0 then
             staco_storage.count = table_size(staco_storage.entities)
-            Framework.logger:logf('Entity count got negative (bug), size is now: %d', staco_storage.count)
+            Framework.logger.log(0, 'removeEntity', 'Entity count got negative (bug), size is now: %d',
+                function() return staco_storage.count end)
         end
     end
 

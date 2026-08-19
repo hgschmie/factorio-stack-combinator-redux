@@ -19,7 +19,7 @@ local This = {
     settings = require('lib.settings'),
 }
 
-if script then
+function This.boot()
     This.StackCombinator = require('scripts.stack_combinator')
     This.Gui = require('scripts.gui')
     This.DescGui = require('scripts.desc-gui')
