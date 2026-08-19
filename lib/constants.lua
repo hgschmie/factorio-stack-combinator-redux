@@ -13,6 +13,7 @@ local table = require('stdlib.utils.table')
 ---@class stack_combinator.Constants
 local Constants = {
     prefix = 'hps__sc-',
+    log_prefix = 'StaCo',
     name = 'stack-combinator-redux',
     root = '__stack-combinator-redux__',
     order = 'c[combinators]-cs[stack-combinator-redux]',
