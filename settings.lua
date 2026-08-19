@@ -13,6 +13,8 @@ local framework_settings = {
         order = "az",
         setting_type = "startup",
         default_value = false,
+        -- Debugging is currently not in use
+        hidden = true,
     },
 }
 
