@@ -744,10 +744,10 @@ end
 
 --- close the UI (button or shortcut key)
 ---
----@param event EventData.on_gui_click|EventData.on_gui_opened
+---@param event EventData.on_gui_click|EventData.on_gui_opened|framework.gui.custominput_data
 ---@param gui framework.gui
 function Gui.onWindowClosed(event, gui)
-    Framework.gui_manager:destroyGui(event.player_index, gui.type)
+    Framework.gui_manager:destroyGuiByPlayer(event.player_index)
 end
 
 ---@param event EventData.on_gui_click
